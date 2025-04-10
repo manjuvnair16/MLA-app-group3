@@ -6,6 +6,12 @@ The Activity Tracking functionality uses the MERN stack (MongoDB, Express.js, Re
 
 ![Screenshot](screenshots/frontpage.png)  
 
+### Project Setup Instructions
+
+- One fork per group: Before you begin, one member of your group should fork this repository.
+- Each group member should clone the forked version of the repository to their local environment or GitHub Codespace.
+- All project work should be done in your group's fork.
+
 ### Current Features
 
 - User registration for personalized tracking
@@ -22,7 +28,6 @@ The Activity Tracking functionality uses the MERN stack (MongoDB, Express.js, Re
 - Python Flask
 - Java 8
 (all already installed in the devcontainer)
-
 
 ## Development in Github Codespaces
 
