@@ -3,25 +3,25 @@ import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import NavbarComponent from './components/navbar';
-import TrackExercise from './components/trackExercise';
-import Statistics from './components/statistics';
-import Footer from './components/footer';
-import Login from './components/login';
-import Signup from './components/signup';
-import Journal from './components/journal';
+import NavbarComponent from './components/navbar.js';
+import TrackExercise from './components/trackExercise.js';
+import Statistics from './components/statistics.js';
+import Footer from './components/footer.js';
+import Login from './components/login.js';
+import Signup from './components/signup.js';
+import Journal from './components/journal.js';
 import logo from './img/CFG_logo.png'; // Update the path to your logo file
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState(''); 
+  const [currentUser, setCurrentUser] = useState('');
 
   const handleLogout = () => {
-    setIsLoggedIn(false); 
-    setCurrentUser(''); 
+    setIsLoggedIn(false);
+    setCurrentUser('');
   };
 
-  const handleLogin = (username) => { 
+  const handleLogin = (username) => {
     setIsLoggedIn(true);
     setCurrentUser(username);
   };

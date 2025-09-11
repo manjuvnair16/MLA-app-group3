@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import { trackExercise } from '../api';
+import { trackExercise } from '../api.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { IconButton, DirectionsRunIcon, BikeIcon, PoolIcon, FitnessCenterIcon, OtherIcon } from '@mui/material';
-// import DirectionsRunIcon from '@material-ui/icons/DirectionsRun';
-// import BikeIcon from '@material-ui/icons/DirectionsBike';
-// import PoolIcon from '@material-ui/icons/Pool';
-// import FitnessCenterIcon from '@material-ui/icons/FitnessCenter';
-// import OtherIcon from '@material-ui/icons/HelpOutline';
+import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
+import BikeIcon from '@mui/icons-material/DirectionsBike';
+import { IconButton } from '@mui/material';
+import PoolIcon from '@mui/icons-material/Pool';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import OtherIcon from '@mui/icons-material/HelpOutline';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
