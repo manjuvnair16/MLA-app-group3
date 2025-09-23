@@ -75,7 +75,7 @@ public class AuthControllerTest {
 
     // Tests for login
     @Test
-    public void authenticateUser_whenCredentialsAreValid_authenticatesUser() {
+    public void authenticateUser_whenCredentialsAreCorrect_authenticatesUser() {
         User user = createUser("validUser", "password");
         User existingUser = createUser("validUser", "encodedPassword");
 
@@ -88,6 +88,35 @@ public class AuthControllerTest {
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("User authenticated", response.getBody());
+    }
+
+    @Test
+    public void authenticateUser_whenPasswordIsIncorrect_returnsUnauthorized() {
+        User user = createUser("validUser", "wrongPassword");
+        User existingUser = createUser("validUser", "encodedPassword");
+
+        when(userRepository.findByUsername("validUser"))
+            .thenReturn(existingUser);
+        when(passwordEncoder.matches("wrongPassword", "encodedPassword"))
+            .thenReturn(false);
+
+        ResponseEntity<?> response = authController.authenticateUser(user);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertEquals("Invalid credentials", response.getBody());
+    }
+
+    @Test
+    public void authenticateUser_whenUserDoesNotExist_returnsUnauthorized() {
+        User user = createUser("nonExistentUser", "password");
+
+        when(userRepository.findByUsername("nonExistentUser"))
+            .thenReturn(null);
+
+        ResponseEntity<?> response = authController.authenticateUser(user);
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertEquals("Invalid credentials", response.getBody());
     }
     
 }
