@@ -8,8 +8,10 @@ import { IconButton } from '@mui/material';
 import PoolIcon from '@mui/icons-material/Pool';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import OtherIcon from '@mui/icons-material/HelpOutline';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { enGB } from 'date-fns/locale';
 
 const TrackExercise = ({ currentUser }) => {
   const [state, setState] = useState({
@@ -54,11 +56,16 @@ const TrackExercise = ({ currentUser }) => {
 
         <Form.Group controlId="formDate" className="form-margin">
           <Form.Label>Date:</Form.Label>
-          <DatePicker
-            selected={state.date}
-            onChange={(date) => setState({ ...state, date })}
-            dateFormat="yyyy/MM/dd"
-          />
+          <div>
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
+              <DatePicker
+                value={state.date}
+                onChange={(date) => setState({ ...state, date })}
+                renderInput={(params) => <Form.Control {...params} />}
+                inputFormat="yyyy/MM/dd"
+              />
+            </LocalizationProvider>
+          </div>
         </Form.Group>
         <div style={{ marginBottom: '20px' }}>
           <IconButton color={state.exerciseType === 'Running' ? "primary" : "default"} onClick={() => setState({ ...state, exerciseType: 'Running' })}>
