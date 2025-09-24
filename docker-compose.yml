@@ -62,6 +62,21 @@ services:
     networks:
       - app-network
 
+  graphql-gateway:
+    build:
+      context: ./graphql-gateway
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - ACTIVITY_URL=http://activity-tracking:5300
+      - CORS_ORIGINS=http://localhost:3000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - activity-tracking
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
