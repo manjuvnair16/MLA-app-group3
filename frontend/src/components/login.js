@@ -19,13 +19,16 @@ const Login = ({ onLogin }) => {
 
       if (response.status === 200) {
         onLogin(username);
-      } else {
-        setError('Invalid credentials');
       }
+      
     } catch (err) {
-      setError('Failed to login');
+      if (err.response && err.response.status === 401) {
+        setError('Username or password is incorrect - please try again.');
+      } else {
+        setError('Failed to login');
+      }
     }
-};
+  };
 
   return (
     <div className="login-container">
@@ -59,8 +62,8 @@ const Login = ({ onLogin }) => {
       </Form>
 
       <p className="mt-3">
-    Don't have an account? <Link to="/signup">Sign up</Link>
-</p>
+        Don't have an account? <Link to="/signup">Sign up</Link>
+      </p>
     </div>
   );
 };
