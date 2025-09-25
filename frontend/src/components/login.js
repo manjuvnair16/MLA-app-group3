@@ -1,67 +1,96 @@
-import React, { useState } from 'react';
-import { Button, Form, Alert } from 'react-bootstrap';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import axios from "axios";
+import {
+  Alert,
+  Box,
+  Button,
+  Stack,
+  TextField,
+  Typography,
+  // Link as MUILink,
+} from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', {
-        username,
-        password,
-      });
+      const payload = { email, password };
 
-      if (response.status === 200) {
-        onLogin(username);
+      const { status, data } = await axios.post(
+        "http://localhost:8080/api/auth/login",
+        payload
+      );
+
+      if (status === 200) {
+        onLogin(email);
       } else {
-        setError('Invalid credentials');
+        setError(data || "Invalid credentials");
       }
     } catch (err) {
-      setError('Failed to login');
+      setError(err.response?.data || "Failed to login");
     }
-};
+  };
 
   return (
-    <div className="login-container">
+    <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt: 1 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
-      {error && <Alert variant="danger">{error}</Alert>}
+      <Stack spacing={2.5}>
+        <TextField
+          label="Email"
+          variant="standard"
+          fullWidth
+          margin="none"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-      <Form onSubmit={handleLogin}>
-        <Form.Group controlId="formUsername">
-          <Form.Label>Username</Form.Label>
-          <Form.Control 
-            type="text" 
-            placeholder="Enter username" 
-            value={username} 
-            onChange={(e) => setUsername(e.target.value)} 
-          />
-        </Form.Group>
+        <TextField
+          label="Password"
+          variant="standard"
+          fullWidth
+          margin="none"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-        <Form.Group controlId="formPassword">
-          <Form.Label>Password</Form.Label>
-          <Form.Control 
-            type="password" 
-            placeholder="Password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-          />
-        </Form.Group>
-
-        <Button variant="primary" type="submit" style={{ marginTop: '20px' }}>
+        <Button
+          type="submit"
+          variant="contained"
+          sx={{
+            mt: 2,
+            backgroundColor: "#F54996ff",
+            "&:hover": {
+              backgroundColor: "#bf095bff",
+            },
+          }}
+        >
           Login
         </Button>
-      </Form>
+      </Stack>
 
-      <p className="mt-3">
-    Don't have an account? <Link to="/signup">Sign up</Link>
-</p>
-    </div>
+      <Typography sx={{ mt: 2 }}>
+        Don't have an account?
+        <Button component={RouterLink} to="/signup" variant="text">
+          Sign up
+        </Button>
+      </Typography>
+    </Box>
   );
 };
 

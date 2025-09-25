@@ -1,75 +1,162 @@
-import React, { useState } from 'react';
-import { Button, Form, Alert } from 'react-bootstrap';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import axios from "axios";
+import {
+  Alert,
+  Box,
+  Button,
+  Grid,
+  TextField,
+  Typography,
+  Stack,
+} from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 const Signup = ({ onSignup }) => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    email: "",
+    firstName: "",
+    lastName: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [error, setError] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
     try {
-        const response = await axios.post('http://localhost:8080/api/auth/signup', formData);
+      const payload = {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        password: formData.password,
+      };
 
-        if (response.data === 'User registered successfully!') {
-            console.log('User registered successfully');
-            onSignup(formData.username); 
-        } else {
-            setError(response.data);
-        }
-    } catch (error) {
-        console.error('Error during registration', error);
-        setError(error.response?.data || 'An error occurred during registration. Please try again.');
+      const { data } = await axios.post(
+        "http://localhost:8080/api/auth/signup",
+        payload
+      );
+
+      if (data === "User registered successfully!") {
+        onSignup(formData.email);
+      } else {
+        setError(data);
+      }
+    } catch (err) {
+      console.error("Error during registration", err);
+      setError(
+        err.response?.data ||
+          "An error occurred during registration. Please try again."
+      );
     }
   };
 
-
   return (
-    <div>
-      {error && <Alert variant="danger">{error}</Alert>}
-
-      <Form onSubmit={handleSignup}>
-        <Form.Group controlId="formBasicEmail">
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter username"
-            name="username"
-            value={formData.username}
+    <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      <Box component="form" onSubmit={handleSignup} noValidate sx={{ mt: 1 }}>
+        <Stack spacing={2.5}>
+          <TextField
+            id="standard-basic"
+            label="Email"
+            variant="standard"
+            fullWidth
+            margin="none"
+            name="email"
+            type="email"
+            value={formData.email}
             onChange={handleInputChange}
             required
           />
-        </Form.Group>
 
-        <Form.Group controlId="formBasicPassword">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Password"
+          <TextField
+            id="standard-basic"
+            label="First Name"
+            variant="standard"
+            fullWidth
+            margin="none"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleInputChange}
+            required
+          />
+
+          <TextField
+            id="standard-basic"
+            label="Last Name"
+            variant="standard"
+            fullWidth
+            margin="none"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleInputChange}
+            required
+          />
+
+          <TextField
+            id="standard-basic"
+            label="Password"
+            variant="standard"
+            fullWidth
+            margin="none"
             name="password"
+            type="password"
             value={formData.password}
             onChange={handleInputChange}
             required
           />
-        </Form.Group>
 
-        <Button variant="primary" type="submit" style={{ marginTop: '20px' }}>
-          Signup
+          <TextField
+            id="standard-basic"
+            label="Confirm Password"
+            variant="standard"
+            fullWidth
+            margin="none"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+            required
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{
+              mt: 2,
+              backgroundColor: "#F54996ff",
+              "&:hover": {
+                backgroundColor: "#bf095bff",
+              },
+            }}
+          >
+            Signup
+          </Button>
+        </Stack>
+      </Box>
+
+      <Typography sx={{ mt: 2 }}>
+        Already have an account?{" "}
+        <Button component={RouterLink} to="/login" variant="text">
+          Login
         </Button>
-      </Form>
-      <p className="mt-3">
-    Already have an account? <Link to="/login">Login</Link>
-</p>
-    </div>
+      </Typography>
+    </Box>
   );
 };
 
