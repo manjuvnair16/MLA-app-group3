@@ -7,7 +7,6 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
 
 
-// default Docker service name + port (adjust if your activity service uses another)
 const ACTIVITY_URL = process.env.ACTIVITY_URL || "http://activity-tracking:5300";
 
 /** ============ Schema ============ */
