@@ -20,13 +20,27 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            return ResponseEntity.badRequest().body("User already exists - please log in");
+        // Supports legacy registration with username, and new email registration
+        // TODO: deprecate username registration
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            // new registration with email
+            if (userRepository.existsByEmail(user.getEmail())) {
+                return ResponseEntity.badRequest().body("Email already registered - please log in");
+            }
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepository.save(user);
+            return ResponseEntity.ok("User registered successfully!");
+        } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+            // legacy registration with username
+            if (userRepository.existsByUsername(user.getUsername())) {
+                return ResponseEntity.badRequest().body("User already exists - please log in");
+            }
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepository.save(user);
+            return ResponseEntity.ok("User registered successfully!");
+        } else {
+            return ResponseEntity.badRequest().body("Username or email must be provided");
         }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully!");
     }
 
     @PostMapping("/login")

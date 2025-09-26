@@ -41,9 +41,16 @@ public class AuthControllerTest {
         return user;
     }
 
+    private User createUserWithEmail(String email, String password) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(password);
+        return user;
+    }
+
     // Tests for sign up
     @Test
-    public void registerUser_whenUserDoesNotExist_registersUser() {
+    public void registerUser_whenUsernameDoesNotExist_registersUser() {
         User user = createUser("newUser", "password");
 
         when(userRepository.existsByUsername("newUser"))
@@ -52,6 +59,7 @@ public class AuthControllerTest {
             .thenReturn("encodedPassword");
 
         ResponseEntity<?> response = authController.registerUser(user);
+        verify(userRepository).existsByUsername("newUser");
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("User registered successfully!", response.getBody());
@@ -60,16 +68,50 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void registerUser_whenUserExists_returnsBadRequest() {
+    public void registerUser_whenUsernameExists_returnsBadRequest() {
         User user = createUser("existingUser", "password");
 
         when(userRepository.existsByUsername("existingUser"))
             .thenReturn(true);
 
         ResponseEntity<?> response = authController.registerUser(user);
+        verify(userRepository).existsByUsername("existingUser");
 
         assertEquals(400, response.getStatusCodeValue());
         assertEquals("User already exists - please log in", response.getBody());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    public void registerUser_whenEmailDoesNotExist_registersUser() {
+        User user = createUserWithEmail("newEmail@test.com", "password");
+
+        when(userRepository.existsByEmail("newEmail@test.com"))
+            .thenReturn(false);
+        when(passwordEncoder.encode("password"))
+            .thenReturn("encodedPassword");
+
+        ResponseEntity<?> response = authController.registerUser(user);
+        verify(userRepository).existsByEmail("newEmail@test.com");
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("User registered successfully!", response.getBody());
+        assertEquals("encodedPassword", user.getPassword());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    public void registerUser_whenEmailExists_returnsBadRequest() {
+        User user = createUserWithEmail("existingEmail@test.com", "password");
+
+        when(userRepository.existsByEmail("existingEmail@test.com"))
+            .thenReturn(true);
+
+        ResponseEntity<?> response = authController.registerUser(user);
+        verify(userRepository).existsByEmail("existingEmail@test.com");
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertEquals("Email already registered - please log in", response.getBody());
         verify(userRepository, never()).save(any(User.class));
     }
 
