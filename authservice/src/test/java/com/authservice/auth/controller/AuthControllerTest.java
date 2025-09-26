@@ -117,7 +117,7 @@ public class AuthControllerTest {
 
     // Tests for login
     @Test
-    public void authenticateUser_whenCredentialsAreCorrect_authenticatesUser() {
+    public void authenticateUser_whenUsernameAndPasswordCorrect_authenticatesUser() {
         User user = createUser("validUser", "password");
         User existingUser = createUser("validUser", "encodedPassword");
 
@@ -127,13 +127,14 @@ public class AuthControllerTest {
             .thenReturn(true);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        verify(userRepository).findByUsername("validUser");
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("User authenticated", response.getBody());
     }
 
     @Test
-    public void authenticateUser_whenPasswordIsIncorrect_returnsUnauthorized() {
+    public void authenticateUser_whenUsernameCorrectPasswordIncorrect_returnsUnauthorized() {
         User user = createUser("validUser", "wrongPassword");
         User existingUser = createUser("validUser", "encodedPassword");
 
@@ -143,22 +144,54 @@ public class AuthControllerTest {
             .thenReturn(false);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        verify(userRepository).findByUsername("validUser");
 
         assertEquals(401, response.getStatusCodeValue());
         assertEquals("Invalid credentials", response.getBody());
     }
 
     @Test
-    public void authenticateUser_whenUserDoesNotExist_returnsUnauthorized() {
+    public void authenticateUser_whenUsernameDoesNotExist_returnsUnauthorized() {
         User user = createUser("nonExistentUser", "password");
 
         when(userRepository.findByUsername("nonExistentUser"))
             .thenReturn(null);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        verify(userRepository).findByUsername("nonExistentUser");
 
         assertEquals(401, response.getStatusCodeValue());
         assertEquals("Invalid credentials", response.getBody());
     }
-    
+
+    @Test
+    public void authenticateUser_whenEmailDoesNotExist_returnsUnauthorized() {
+        User user = createUserWithEmail("nonExistentEmail@test.com", "password");
+
+        when(userRepository.findByEmail("nonExistentEmail@test.com"))
+            .thenReturn(null);
+
+        ResponseEntity<?> response = authController.authenticateUser(user);
+        verify(userRepository).findByEmail("nonExistentEmail@test.com");
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertEquals("Invalid credentials", response.getBody());
+    }
+
+    @Test
+    public void authenticateUser_whenEmailAndPasswordCorrect_authenticatesUser() {
+        User user = createUserWithEmail("validEmail@test.com", "password");
+        User existingUser = createUserWithEmail("validEmail@test.com", "encodedPassword");
+
+        when(userRepository.findByEmail("validEmail@test.com"))
+            .thenReturn(existingUser);
+        when(passwordEncoder.matches("password", "encodedPassword"))
+            .thenReturn(true);
+
+        ResponseEntity<?> response = authController.authenticateUser(user);
+        verify(userRepository).findByEmail("validEmail@test.com");
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("User authenticated", response.getBody());
+    }
 }
