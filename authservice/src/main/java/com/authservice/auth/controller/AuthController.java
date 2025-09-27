@@ -20,23 +20,53 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            return ResponseEntity.badRequest().body("User already exists - please log in");
-        }
+        // Supports legacy registration with username, and new email registration
+        // TODO: deprecate username registration
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully!");
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            // registration with email
+            if (userRepository.existsByEmail(user.getEmail())) {
+                return ResponseEntity.badRequest().body("Email already registered - please log in");
+            }
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepository.save(user);
+            return ResponseEntity.ok("User registered successfully!");
+        } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+            // legacy registration with username
+            if (userRepository.existsByUsername(user.getUsername())) {
+                return ResponseEntity.badRequest().body("User already exists - please log in");
+            }
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            userRepository.save(user);
+            return ResponseEntity.ok("User registered successfully!");
+        } else {
+            return ResponseEntity.badRequest().body("Username or email must be provided");
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody User user) {
-        User existingUser = userRepository.findByUsername(user.getUsername());
+        // Supports login with either username or email
+        // TODO: deprecate username login
 
-        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-            return ResponseEntity.ok("User authenticated");
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            // login with email
+            User existingUser = userRepository.findByEmail(user.getEmail());
+            if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+                return ResponseEntity.ok("User authenticated");
+            } else {
+                return ResponseEntity.status(401).body("Invalid credentials");
+            }
+        } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+            // legacy login with username
+            User existingUser = userRepository.findByUsername(user.getUsername());
+            if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+                return ResponseEntity.ok("User authenticated");
+            } else {
+                return ResponseEntity.status(401).body("Invalid credentials");
+            }
         } else {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            return ResponseEntity.badRequest().body("Username or email must be provided");
         }
     }
 }
