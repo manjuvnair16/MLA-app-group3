@@ -194,4 +194,21 @@ public class AuthControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("User authenticated", response.getBody());
     }
+
+    @Test
+    public void authenticateUser_whenEmailCorrectPasswordIncorrect_returnsUnauthorized() {
+        User user = createUserWithEmail("validEmail@test.com", "wrongPassword");
+        User existingUser = createUserWithEmail("validEmail@test.com", "encodedPassword");
+
+        when(userRepository.findByEmail("validEmail@test.com"))
+            .thenReturn(existingUser);
+        when(passwordEncoder.matches("wrongPassword", "encodedPassword"))
+            .thenReturn(false);
+
+        ResponseEntity<?> response = authController.authenticateUser(user);
+        verify(userRepository).findByEmail("validEmail@test.com");
+
+        assertEquals(401, response.getStatusCodeValue());
+        assertEquals("Invalid credentials", response.getBody());
+    }
 }
