@@ -12,7 +12,7 @@ it('renders login form', () => {
             <Login onLogin={jest.fn()} />
         </MemoryRouter>
     );
-    expect(screen.getByLabelText(/Username/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Login/i })).toBeInTheDocument();
 });
@@ -25,11 +25,11 @@ it('calls onLogin on successful login', async () => {
             <Login onLogin={onLogin} />
         </MemoryRouter>
     );
-    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'username' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password' } });
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@test.com' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password' } });
+    fireEvent.click(screen.getByRole('button', { name: /Login/i }));
 
-    await waitFor(() => expect(onLogin).toHaveBeenCalledWith('username'));
+    await waitFor(() => expect(onLogin).toHaveBeenCalledWith('test@test.com'));
 });
 
 it('shows error message on incorrect password', async () => {
@@ -39,9 +39,9 @@ it('shows error message on incorrect password', async () => {
             <Login onLogin={jest.fn()} />
         </MemoryRouter>
     );
-    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'username' } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrongpassword' } });
-    fireEvent.click(screen.getByRole('button', { name: /login/i }));
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@test.com' } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'wrongpassword' } });
+    fireEvent.click(screen.getByRole('button', { name: /Login/i }));
 
-    await waitFor(() => expect(screen.getByText(/username or password is incorrect/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Username or password is incorrect/i)).toBeInTheDocument());
 });
