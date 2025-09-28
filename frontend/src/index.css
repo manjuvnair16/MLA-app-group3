@@ -1,3 +1,25 @@
+/* Design tokens */
+:root {
+  --color-primary: #7b93ff;
+  --color-primary-600: #5f77ff;
+  --color-primary-700: #405bff;
+  --color-bg: #0f1220;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f7fb;
+  --color-text: #1b1f3b;
+  --color-text-muted: #6b7280;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 4px 12px rgba(10, 14, 34, 0.08);
+  --shadow-md: 0 12px 28px rgba(10, 14, 34, 0.12);
+  --gap-1: 8px;
+  --gap-2: 12px;
+  --gap-3: 16px;
+  --gap-4: 24px;
+  --gap-5: 32px;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,6 +27,14 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Soft Primary Wash: slightly stronger, still breathable */
+  background:
+    radial-gradient(1400px 700px at 100% -20%, rgba(123, 147, 255, 0.28), transparent 62%),
+    radial-gradient(900px 500px at -10% 110%, rgba(64, 91, 255, 0.22), transparent 62%),
+    linear-gradient(180deg, #f3f6ff, #eef2ff);
+  background-color: #f3f6ff; /* fallback */
+  color: var(--color-text);
 }
 
 code {

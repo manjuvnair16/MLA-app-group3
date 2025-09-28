@@ -45,9 +45,9 @@ const Journal = ({ currentUser }) => {
       <br></br>
       <div className="date-range">
         <Button className="button-small" onClick={goToPreviousWeek}>&larr; Previous</Button>
-        <span>{moment(startDate).format('YYYY-MM-DD')} to {moment(endDate).format('YYYY-MM-DD')}</span>
+        <span className="week-chip">{moment(startDate).format('YYYY-MM-DD')} to {moment(endDate).format('YYYY-MM-DD')}</span>
         <Button className="button-small" onClick={goToNextWeek}>Next &rarr;</Button>
-        </div>
+      </div>
       <ul>
         {exercises && exercises.length > 0 ? (
           exercises.map((exercise, index) => (
