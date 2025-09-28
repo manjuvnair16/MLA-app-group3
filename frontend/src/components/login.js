@@ -72,19 +72,19 @@ const Login = ({ onLogin }) => {
           required
         />
 
-        <Button
-          type="submit"
-          variant="contained"
-          sx={{
-            mt: 2,
-            backgroundColor: "#F54996ff",
-            "&:hover": {
-              backgroundColor: "#bf095bff",
-            },
-          }}
-        >
-          Login
-        </Button>
+      <Button
+        type="submit"
+        variant="contained"
+        sx={{
+          mt: 2,
+          backgroundColor: "var(--color-primary)",
+          "&:hover": {
+            backgroundColor: "var(--color-primary-600)",
+          },
+        }}
+      >
+        Login
+      </Button>
       </Stack>
 
       <Typography sx={{ mt: 2 }}>

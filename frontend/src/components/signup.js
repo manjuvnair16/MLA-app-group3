@@ -139,9 +139,9 @@ const Signup = ({ onSignup }) => {
             variant="contained"
             sx={{
               mt: 2,
-              backgroundColor: "#F54996ff",
+              backgroundColor: "var(--color-primary)",
               "&:hover": {
-                backgroundColor: "#bf095bff",
+                backgroundColor: "var(--color-primary-600)",
               },
             }}
           >

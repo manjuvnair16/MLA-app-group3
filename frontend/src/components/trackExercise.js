@@ -68,21 +68,31 @@ const TrackExercise = ({ currentUser }) => {
           </div>
         </Form.Group>
         <div style={{ marginBottom: '20px' }}>
-          <IconButton color={state.exerciseType === 'Running' ? "primary" : "default"} onClick={() => setState({ ...state, exerciseType: 'Running' })}>
-            <DirectionsRunIcon fontSize="large" />
-          </IconButton>
-          <IconButton color={state.exerciseType === 'Cycling' ? "primary" : "default"} onClick={() => setState({ ...state, exerciseType: 'Cycling' })}>
-            <BikeIcon fontSize="large" />
-          </IconButton>
-          <IconButton color={state.exerciseType === 'Swimming' ? "primary" : "default"} onClick={() => setState({ ...state, exerciseType: 'Swimming' })}>
-            <PoolIcon fontSize="large" />
-          </IconButton>
-          <IconButton color={state.exerciseType === 'Gym' ? "primary" : "default"} onClick={() => setState({ ...state, exerciseType: 'Gym' })}>
-            <FitnessCenterIcon fontSize="large" />
-          </IconButton>
-          <IconButton color={state.exerciseType === 'Other' ? "primary" : "default"} onClick={() => setState({ ...state, exerciseType: 'Other' })}>
-            <OtherIcon fontSize="large" />
-          </IconButton>
+          <span className={`icon-chip ${state.exerciseType === 'Running' ? 'active' : ''}`}>
+            <IconButton color="inherit" onClick={() => setState({ ...state, exerciseType: 'Running' })}>
+              <DirectionsRunIcon fontSize="large" />
+            </IconButton>
+          </span>
+          <span className={`icon-chip ${state.exerciseType === 'Cycling' ? 'active' : ''}`}>
+            <IconButton color="inherit" onClick={() => setState({ ...state, exerciseType: 'Cycling' })}>
+              <BikeIcon fontSize="large" />
+            </IconButton>
+          </span>
+          <span className={`icon-chip ${state.exerciseType === 'Swimming' ? 'active' : ''}`}>
+            <IconButton color="inherit" onClick={() => setState({ ...state, exerciseType: 'Swimming' })}>
+              <PoolIcon fontSize="large" />
+            </IconButton>
+          </span>
+          <span className={`icon-chip ${state.exerciseType === 'Gym' ? 'active' : ''}`}>
+            <IconButton color="inherit" onClick={() => setState({ ...state, exerciseType: 'Gym' })}>
+              <FitnessCenterIcon fontSize="large" />
+            </IconButton>
+          </span>
+          <span className={`icon-chip ${state.exerciseType === 'Other' ? 'active' : ''}`}>
+            <IconButton color="inherit" onClick={() => setState({ ...state, exerciseType: 'Other' })}>
+              <OtherIcon fontSize="large" />
+            </IconButton>
+          </span>
         </div>
         <Form.Group controlId="description" style={{ marginBottom: '20px' }}>
           <Form.Label>Description:</Form.Label>
