@@ -1,0 +1,32 @@
+name: Notify Slack on PR opened
+
+on:
+  pull_request:
+    types: [opened, closed]     # add more types as needed
+
+jobs:
+  notify:
+    # Optional: skip draft PRs
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Slack notification (Incoming Webhook)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          REPO:   ${{ github.repository }}
+          ACTION: ${{ github.event.action }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TTL: ${{ github.event.pull_request.title }}
+          PR_USR: ${{ github.event.pull_request.user.login }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+        run: |
+          payload=$(cat <<'JSON'
+          {
+            "text": ":bell: *PR ${ACTION}* in `${REPO}`\n*<${PR_URL}|${PR_TTL}>*\nby `${PR_USR}`  ➜  `${PR_HEAD}` → `${PR_BASE}`"
+          }
+          JSON
+          )
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"
