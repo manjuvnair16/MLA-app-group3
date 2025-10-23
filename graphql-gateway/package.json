@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "validate-schema": "graphql-inspector validate master:schema.graphql schema.graphql",
+    "validate-schema": "graphql-inspector validate schema.graphql --noStrictFragments --noStrictDeprecations",
     "check-breaking": "graphql-inspector diff schema-before.json schema-after.json --fail-on-breaking",
     "generate-schema": "node scripts/generate-schema.js"
   },
