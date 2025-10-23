@@ -2,7 +2,7 @@ name: GraphQL Schema Validation
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main]
     paths:
       - 'graphql-gateway/src/**'
       - 'graphql-gateway/schema.graphql'
