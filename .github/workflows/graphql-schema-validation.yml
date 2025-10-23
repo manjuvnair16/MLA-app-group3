@@ -24,13 +24,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: graphql-gateway/package-lock.json
-        
-    - name: Clear npm cache
-      run: |
-        cd graphql-gateway
-        npm cache clean --force
         
     - name: Install dependencies
       run: |
