@@ -72,7 +72,6 @@ const Signup = ({ onSignup }) => {
       <Box component="form" onSubmit={handleSignup} noValidate sx={{ mt: 1 }}>
         <Stack spacing={2.5}>
           <TextField
-            id="standard-basic"
             label="Email"
             variant="standard"
             fullWidth
@@ -85,7 +84,6 @@ const Signup = ({ onSignup }) => {
           />
 
           <TextField
-            id="standard-basic"
             label="First Name"
             variant="standard"
             fullWidth
@@ -97,7 +95,6 @@ const Signup = ({ onSignup }) => {
           />
 
           <TextField
-            id="standard-basic"
             label="Last Name"
             variant="standard"
             fullWidth
@@ -109,7 +106,6 @@ const Signup = ({ onSignup }) => {
           />
 
           <TextField
-            id="standard-basic"
             label="Password"
             variant="standard"
             fullWidth
@@ -122,7 +118,6 @@ const Signup = ({ onSignup }) => {
           />
 
           <TextField
-            id="standard-basic"
             label="Confirm Password"
             variant="standard"
             fullWidth

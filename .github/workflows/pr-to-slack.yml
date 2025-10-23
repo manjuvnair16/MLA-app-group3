@@ -1,0 +1,49 @@
+name: Notify Slack on PR events
+
+on:
+  pull_request:
+    types: [opened, closed]
+
+jobs:
+  notify:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          ACTION: ${{ github.event.action }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_USER: ${{ github.event.pull_request.user.login }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          MERGED: ${{ github.event.pull_request.merged }}
+        run: |
+          if [ "${ACTION}" = "opened" ]; then
+            MESSAGE=":bell: *New pull request opened by* \`${PR_USER}\` in \`${REPO}\` \
+            \n>*#${PR_TITLE}*\n<${PR_URL}|View Pull Request>\nBranch: \`${PR_HEAD}\` → \`${PR_BASE}\`"
+
+          elif [ "${ACTION}" = "closed" ] && [ "${MERGED}" = "true" ]; then
+            MESSAGE=":tada: *Pull request merged by* \`${PR_USER}\` in \`${REPO}\` \
+            \n>*#${PR_TITLE}*\n<${PR_URL}|View Merged PR>\nBranch: \`${PR_HEAD}\` → \`${PR_BASE}\`"
+
+          elif [ "${ACTION}" = "closed" ]; then
+            MESSAGE=":no_entry: *Pull request closed without merge by* \`${PR_USER}\` in \`${REPO}\` \
+            \n>*#${PR_TITLE}*\n<${PR_URL}|View PR>\nBranch: \`${PR_HEAD}\` → \`${PR_BASE}\`"
+          else
+            MESSAGE=":information_source: Pull request *${ACTION}* by \`${PR_USER}\` in \`${REPO}\` \
+            \n>*#${PR_TITLE}*\n<${PR_URL}|View PR>"
+          fi
+
+          payload=$(cat <<EOF
+          {
+            "text": "${MESSAGE}"
+          }
+          EOF
+          )
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"

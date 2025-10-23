@@ -302,5 +302,64 @@ def weekly_summary_stats(username):
         return jsonify(error="An internal error occurred"), 500
 
 
+# Utility function to get the start of the current week (Monday)
+def get_start_of_week():
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Python's weekday() returns 0 for Monday, 6 for Sunday
+    start_of_week = today - timedelta(days=today.weekday())
+    return start_of_week
+    
+# NEW ENDPOINT: Provides Total Duration and Distribution for the CURRENT WEEK
+@app.route('/stats/weekly_summary/<username>', methods=['GET'])
+def weekly_summary_stats(username):
+    start_date = get_start_of_week()
+    end_date = datetime.now()
+
+    # Pipeline filters by user and date, then aggregates duration by exercise type
+    pipeline = [
+        {
+            "$match": {
+                "username": username,
+                "date": {
+                    "$gte": start_date,
+                    "$lt": end_date
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "exerciseType": "$exerciseType"
+                },
+                "totalDuration": {"$sum": "$duration"}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "exerciseType": "$_id.exerciseType",
+                "totalDuration": "$totalDuration"
+            }
+        }
+    ]
+
+    try:
+        weekly_exercises = list(db.exercises.aggregate(pipeline))
+        
+        # Calculate overall weekly total and total exercise types from the aggregated list
+        total_duration = sum(e['totalDuration'] for e in weekly_exercises)
+        total_types = len(weekly_exercises)
+        
+        return jsonify(
+            totalDuration=total_duration,
+            totalTypes=total_types,
+            exercises=weekly_exercises
+        )
+    except Exception as e:
+        logging.error(f"An error occurred while querying MongoDB for weekly summary: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5050)
