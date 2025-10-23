@@ -189,10 +189,10 @@ def daily_trend_stats(username):
         logging.error(f"An error occurred while querying MongoDB: {e}")
         traceback.print_exc()
         return jsonify(error="An internal error occurred"), 500
-    
-    
+
 @app.route('/stats/weekly/', methods=['GET'])
-def weekly_user_stats():
+def weekly_journal_stats():
+    # Frontend sends parameters via query: ?user={currentUser}&start={date}&end={date}
     username = request.args.get('user')
     start_date_str = request.args.get('start')
     end_date_str = request.args.get('end')
@@ -200,11 +200,10 @@ def weekly_user_stats():
     date_format = "%Y-%m-%d"
     try:
         start_date = datetime.strptime(start_date_str, date_format)
+        # Include the whole end day (up to the start of the next day)
         end_date = datetime.strptime(end_date_str, date_format) + timedelta(days=1)
-
-        logging.info(f"Fetching weekly stats for user: {username} from {start_date} to {end_date}")
     except Exception as e:
-        logging.error(f"Error parsing dates: {e}")
+        logging.error(f"Error parsing dates for weekly journal: {e}")
         return jsonify(error="Invalid date format"), 400
 
     pipeline = [
@@ -235,10 +234,70 @@ def weekly_user_stats():
     ]
 
     try:
+        # The Journal component expects the result in the 'stats' key:
         stats = list(db.exercises.aggregate(pipeline))
         return jsonify(stats=stats)
     except Exception as e:
-        current_app.logger.error(f"An error occurred while querying MongoDB: {e}")
+        logging.error(f"An error occurred while querying MongoDB for weekly journal: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
+
+
+# Utility function to get the start of the current week (Monday)
+def get_start_of_week():
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    # Python's weekday() returns 0 for Monday, 6 for Sunday
+    start_of_week = today - timedelta(days=today.weekday())
+    return start_of_week
+    
+# NEW ENDPOINT: Provides Total Duration and Distribution for the CURRENT WEEK
+@app.route('/stats/weekly_summary/<username>', methods=['GET'])
+def weekly_summary_stats(username):
+    start_date = get_start_of_week()
+    end_date = datetime.now()
+
+    # Pipeline filters by user and date, then aggregates duration by exercise type
+    pipeline = [
+        {
+            "$match": {
+                "username": username,
+                "date": {
+                    "$gte": start_date,
+                    "$lt": end_date
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "exerciseType": "$exerciseType"
+                },
+                "totalDuration": {"$sum": "$duration"}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "exerciseType": "$_id.exerciseType",
+                "totalDuration": "$totalDuration"
+            }
+        }
+    ]
+
+    try:
+        weekly_exercises = list(db.exercises.aggregate(pipeline))
+        
+        # Calculate overall weekly total and total exercise types from the aggregated list
+        total_duration = sum(e['totalDuration'] for e in weekly_exercises)
+        total_types = len(weekly_exercises)
+        
+        return jsonify(
+            totalDuration=total_duration,
+            totalTypes=total_types,
+            exercises=weekly_exercises
+        )
+    except Exception as e:
+        logging.error(f"An error occurred while querying MongoDB for weekly summary: {e}")
         traceback.print_exc()
         return jsonify(error="An internal error occurred"), 500
 

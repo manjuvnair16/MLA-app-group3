@@ -9,13 +9,9 @@ import {
 
 // Utility function to convert total minutes to hours and minutes
 const toHoursAndMinutes = (totalMinutes) => {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    
-    if (hours > 0) {
-        return `${hours} hr ${minutes} min`;
-    }
-    return `${minutes} min`;
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return h > 0 ? `${h} hr ${m} min` : `${m} min`;
 };
 
 
@@ -77,63 +73,48 @@ const CustomDonutChartLegend = ({ payload }) => {
 
 
 const Statistics = ({ currentUser }) => {
-  const [data, setData] = useState(null);
-  const [weeklyData, setWeeklyData] = useState([]);
+  const [weeklySummary, setWeeklySummary] = useState({ totalDuration: 0, totalTypes: 0, exercises: [] });
+  const [weeklyData, setWeeklyData] = useState([]); // [{ name:'Mon', Duration: 60 }, ...]
   const [loading, setLoading] = useState(true);
-  const [loadingWeekly, setLoadingWeekly] = useState(true);
+
+
+
 
   useEffect(() => {
-    let statsLoaded = false;
-    let trendLoaded = false;
-    
-    // Function to check if all data is loaded
-    const checkComplete = () => {
-        if (statsLoaded && trendLoaded) {
-            setLoading(false);
-            setLoadingWeekly(false);
-        }
-    };
+    setLoading(true);
 
-    // 1. Fetch Aggregated Stats (for Donut Chart and Metrics)
-    const statsUrl = `http://localhost:5050/stats/${currentUser}`;
-    axios.get(statsUrl)
-      .then(response => {
-        const currentUserStats = response.data.stats.find(item => item.username === currentUser);
-        setData(currentUserStats);
-      })
-      .catch(error => {
-        console.error('There was an error fetching aggregated stats:', error);
-      })
-      .finally(() => {
-        statsLoaded = true;
-        checkComplete();
-      });
+    const summaryUrl = `http://localhost:5050/stats/weekly_summary/${encodeURIComponent(currentUser)}`;
+    const trendUrl   = `http://localhost:5050/stats/daily_trend/${encodeURIComponent(currentUser)}`;
 
-// 2. Fetch Weekly Trend Data (for Line Chart)
-    const trendUrl = `http://localhost:5050/stats/daily_trend/${currentUser}`;
-    axios.get(trendUrl)
-        .then(response => {
-            setWeeklyData(response.data.trend);
-        })
-        .catch(error => {
-            console.error('Error fetching weekly trend:', error);
-        })
-        .finally(() => {
-            trendLoaded = true;
-            checkComplete();
+    // ✅ Load both and set state
+    Promise.all([axios.get(summaryUrl), axios.get(trendUrl)])
+      .then(([summaryRes, trendRes]) => {
+        setWeeklySummary({
+          totalDuration: summaryRes.data?.totalDuration || 0,
+          totalTypes: summaryRes.data?.totalTypes || 0,
+          exercises: summaryRes.data?.exercises || []
         });
 
+        // Ensure the trend array is in the shape the chart expects
+        const trend = Array.isArray(trendRes.data?.trend) ? trendRes.data.trend : [];
+        setWeeklyData(trend);
+      })
+      .catch(err => {
+        console.error('Failed to load statistics', err);
+        setWeeklySummary({ totalDuration: 0, totalTypes: 0, exercises: [] });
+        setWeeklyData([]);
+      })
+      .finally(() => setLoading(false));
   }, [currentUser]);
   
-if (loading || loadingWeekly) {
+if (loading) {
     return <div className="stats-container"><p>Loading statistics...</p></div>;
   }
 
-  const exerciseData = data ? data.exercises : [];
-  
-  const totalDuration = exerciseData.reduce((sum, item) => sum + item.totalDuration, 0);
+  const exerciseData = weeklySummary.exercises;
+  const totalDuration = weeklySummary.totalDuration;
   const totalDurationFormatted = toHoursAndMinutes(totalDuration);
-  const totalExerciseTypes = exerciseData.length;
+  const totalExerciseTypes = weeklySummary.totalTypes;
 
   const distributionData = exerciseData.map(item => ({
     name: item.exerciseType,

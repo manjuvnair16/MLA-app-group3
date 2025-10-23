@@ -63,6 +63,12 @@
     margin: 0; 
     line-height: 1.1; 
     color: inherit;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px; /* keeps cards even and avoids crowding */
 }
 
 /* Base style applied to all three metric cards */
