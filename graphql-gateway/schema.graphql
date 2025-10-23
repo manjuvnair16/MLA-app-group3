@@ -1,64 +1,79 @@
-# This file will be generated from your merged schema
-# It's used for validation purposes
+#graphql
+  type Query {
+    _empty: String
+  }
+  
+  type Mutation {
+    _empty: String
+  }
+  
+  #graphql
+  type Exercise {
+    id: ID!
+    username: String!
+    exerciseType: String!
+    description: String
+    duration: Int!
+    date: String!
+    createdAt: String
+    updatedAt: String
+  }
 
-type Query {
-  _empty: String
-  exercises: [Exercise!]!
-  exercise(id: ID!): Exercise
-  analytics: AnalyticsQuery!
-}
+  input AddExerciseInput {
+    username: String!
+    exerciseType: String!
+    description: String
+    duration: Int!
+    date: String!
+  }
 
-type Mutation {
-  _empty: String
-  addExercise(input: AddExerciseInput!): Exercise!
-  updateExercise(id: ID!, input: UpdateExerciseInput!): Exercise!
-  deleteExercise(id: ID!): String!
-}
+  input UpdateExerciseInput {
+    username: String!
+    exerciseType: String!
+    description: String
+    duration: Int!
+    date: String!
+  }
 
-type Exercise {
-  id: ID!
-  username: String!
-  exerciseType: String!
-  description: String
-  duration: Int!
-  date: String!
-  createdAt: String
-  updatedAt: String
-}
+  extend type Query {
+    exercises: [Exercise!]!
+    exercise(id: ID!): Exercise
+  }
 
-input AddExerciseInput {
-  username: String!
-  exerciseType: String!
-  description: String
-  duration: Int!
-  date: String!
-}
+  extend type Mutation {
+    addExercise(input: AddExerciseInput!): Exercise!
+    updateExercise(id: ID!, input: UpdateExerciseInput!): Exercise!
+    deleteExercise(id: ID!): String!
+  }
 
-input UpdateExerciseInput {
-  username: String!
-  exerciseType: String!
-  description: String
-  duration: Int!
-  date: String!
-}
+  #graphql
+  type ExerciseStats {
+    exerciseType: String!
+    totalDuration: Int!
+  }
 
-type ExerciseStats {
-  exerciseType: String!
-  totalDuration: Int!
-}
+  type UserStats {
+    username: String!
+    exercises: [ExerciseStats!]!
+  }
 
-type UserStats {
-  username: String!
-  exercises: [ExerciseStats!]!
-}
+  type WeeklyStats {
+    exerciseType: String!
+    totalDuration: Int!
+  }
 
-type WeeklyStats {
-  exerciseType: String!
-  totalDuration: Int!
-}
+  type AnalyticsQuery {
+    # Get all user statistics
+    allStats: [UserStats!]!
+    
+    # Get statistics for a specific user
+    userStats(username: String!): [UserStats!]!
+    
+    # Get weekly statistics for a user within date range
+    weeklyStats(username: String!, startDate: String!, endDate: String!): [WeeklyStats!]!
+  }
 
-type AnalyticsQuery {
-  allStats: [UserStats!]!
-  userStats(username: String!): [UserStats!]!
-  weeklyStats(username: String!, startDate: String!, endDate: String!): [WeeklyStats!]!
-}
+  extend type Query {
+    analytics: AnalyticsQuery!
+  }
+
