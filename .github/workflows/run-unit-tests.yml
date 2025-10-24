@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - main
- 
+
 jobs:
   frontend:
     name: frontend tests
@@ -24,8 +24,9 @@ jobs:
           npm ci
 
       - name: Run frontend tests
-        working-directory: frontend
-        run: npm test
+        run: |
+          cd frontend
+          npm test
 
   authservice:
     name: authservice tests
