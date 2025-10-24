@@ -1,30 +1,240 @@
+:root {
+    --color-primary-accent: #5B53D0; 
+    --color-secondary-accent: #ff0073; 
+    --color-neutral-bg: #F8F9FA; 
+    --color-card-bg: #FFFFFF; 
+    --color-text-dark: #343A40; 
+    --color-text-light: #F8F8F8; 
+    --color-text-muted: #6c757d;
+}
 
+/* Layout and Containers */
 .stats-container {
-    max-width: 800px;
-    margin: auto;
-    background-color: var(--color-surface);
-    padding: var(--gap-5);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-  }
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 40px;
+    background-color: var(--color-neutral-bg); 
+    border-radius: 12px;
+}
 
-  .exercise-data {
-    margin-bottom: var(--gap-3);
-    padding: var(--gap-3);
-    background: var(--color-surface-muted);
-    border-radius: var(--radius-md);
+.stats-container h2 {
+    text-align: center;
+    color: var(--color-text-dark);
+    margin-bottom: 40px; 
+    font-size: 2em;
+}
+
+/* Header Cards (Metric Totals) */
+.stats-header-cards {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 50px;
+}
+
+.stat-card {
+    flex: 1;
+    min-width: 200px;
+    padding: 30px 25px; 
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    font-size: 1em;
+    font-weight: 400;
+    /* Ensure header text is visible on all card types */
+    color: inherit;
+    opacity: 0.9;
+    margin-bottom: 10px; 
+}
+
+.stat-card p {
+    font-size: 3.0em; 
+    font-weight: 700;
+    margin: 0; 
+    line-height: 1.1; 
+    color: inherit;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px; /* keeps cards even and avoids crowding */
+}
+
+/* Base style applied to all three metric cards */
+.primary-bg,
+.secondary-bg,
+.accent-bg { 
+    background-color: var(--color-card-bg); /* White background for all */
+    
+    color: var(--color-text-dark); 
+}
+
+
+.stat-card h3 {
+    color: var(--color-text-dark);
+    font-weight: 400; /* Lighter weight for the title */
+    opacity: 0.9;
+    margin-bottom: 10px; 
+    margin-top: 0; 
+    font-size: 1em;
+}
+
+.stat-card p {
+    color: var(--color-primary-accent);
+    font-weight: 700; /* Bold weight for the number */
+    font-size: 3.0em; 
+    line-height: 1.1; 
+    margin: 0;
+}
+
+.accent-bg {
+    border: 1px solid var(--color-neutral-bg); 
+}
+
+
+/* Charts Grid Layout */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr; /* More space for the donut chart side */
+    gap: 20px;
+}
+
+.chart-card {
+    background-color: var(--color-card-bg); 
+    padding: 30px; 
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chart-card h3 {
+    color: var(--color-text-dark);
+    margin-top: 0;
+    margin-bottom: 25px; 
+    font-size: 1.4em;
+    text-align: left; 
+    border-left: 4px solid var(--color-primary-accent);
+    padding-left: 10px;
+}
+
+/* Default span for charts on desktop */
+.wide-chart {
+    grid-column: span 1;
+}
+
+.small-chart {
+    grid-column: span 1;
+    min-height: 500px; 
+    display: flex;
+    flex-direction: column;
+}
+
+/* Styles for the Custom Donut Chart Legend */
+.donut-legend-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    align-items: flex-start;
+    padding-left: 10px;
+}
+
+.donut-legend-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    border-left: 4px solid var(--color-primary);
-  }
+    font-size: 0.95em;
+    color: var(--color-text-dark);
+}
 
-  .exercise-data strong {
-    color: var(--color-text);
-  }
-  
-  .no-data-message {
+.donut-legend-color-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    border: 1px solid var(--color-neutral-bg);
+}
+
+.donut-legend-name {
+    margin-right: 5px;
+    font-weight: 500;
+}
+
+.donut-legend-value {
     color: var(--color-text-muted);
-  }
+    font-size: 0.85em;
+}
 
-  
+/* Styles for the Custom Donut Chart Tooltip */
+.custom-tooltip {
+    background-color: white;
+    border: 1px solid var(--color-neutral-bg, #E0E0E0);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-tooltip .label {
+    margin: 0;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.custom-tooltip .intro {
+    margin: 5px 0 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.9em;
+}
+
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.legend-chip {
+  background: var(--color-card-bg);
+  border: 1px solid #E7E9F2;
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  color: #4F5566;
+  font-weight: 500;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* Responsive Adjustments for Mobile */
+@media (max-width: 900px) {
+    .stats-header-cards {
+        flex-wrap: wrap;
+    }
+    .stat-card {
+        flex: 1 1 100%; /* Stack summary cards on mobile */
+    }
+    .charts-grid {
+        grid-template-columns: 1fr; /* Stack charts vertically on smaller screens */
+    }
+    .wide-chart, .small-chart {
+        grid-column: span 1;
+    }
+}
+
