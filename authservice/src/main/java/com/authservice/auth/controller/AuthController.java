@@ -75,7 +75,7 @@ public class AuthController {
             AuthResponseDTO response = new AuthResponseDTO(jwt, "User authenticated");
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(401).body(new ErrorResponseDTO("Invalid credentials"));
+            return ResponseEntity.status(401).body(new ErrorResponseDTO("Email or password is incorrect - please try again"));
         }
     }
 }

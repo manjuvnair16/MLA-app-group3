@@ -31,7 +31,7 @@ public class AuthControllerTest {
     private static final String USER_EXISTS_MSG = "User already exists - please log in";
     private static final String EMAIL_EXISTS_MSG = "Email already registered - please log in";
     private static final String USER_AUTHENTICATED_MSG = "User authenticated";
-    private static final String INVALID_CREDENTIALS_MSG = "Invalid credentials";
+    private static final String INVALID_CREDENTIALS_MSG = "Email or password is incorrect - please try again";
     private static final String JWT = "jwt-token-for-use-in-tests-123456789";
 
     // Mock dependencies

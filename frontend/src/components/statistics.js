@@ -84,9 +84,14 @@ const Statistics = ({ currentUser }) => {
 
     const summaryUrl = `http://localhost:5050/stats/weekly_summary/${encodeURIComponent(currentUser)}`;
     const trendUrl   = `http://localhost:5050/stats/daily_trend/${encodeURIComponent(currentUser)}`;
+    const jwt = localStorage.getItem('jwt');
+    const headers = jwt ? { Authorization: `Bearer ${jwt}`} : {};
 
     // ✅ Load both and set state
-    Promise.all([axios.get(summaryUrl), axios.get(trendUrl)])
+    Promise.all([
+      axios.get(summaryUrl, {headers}), 
+      axios.get(trendUrl, {headers})
+    ])
       .then(([summaryRes, trendRes]) => {
         setWeeklySummary({
           totalDuration: summaryRes.data?.totalDuration || 0,

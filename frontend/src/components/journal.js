@@ -12,7 +12,12 @@ const Journal = ({ currentUser }) => {
   const fetchExercises = async () => {
     try {
       const url = `http://localhost:5050/stats/weekly/?user=${currentUser}&start=${moment(startDate).format('YYYY-MM-DD')}&end=${moment(endDate).format('YYYY-MM-DD')}`;
-      const response = await axios.get(url);
+      const jwt = localStorage.getItem('jwt');
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: jwt ? `Bearer ${jwt}` : undefined
+        }
+      });
       console.log('API Response:', response.data);
       if (response.data.stats && Array.isArray(response.data.stats)) {
         setExercises(response.data.stats);
