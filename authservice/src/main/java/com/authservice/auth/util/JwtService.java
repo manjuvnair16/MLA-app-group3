@@ -7,15 +7,20 @@ import java.security.Key;
 
 import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+@Service
 public class JwtService {
-    private static final String SECRET_KEY = "secret_key_example";
+    @Value("${jwt.secret.key}")
+    private String secretKey;
     private static final long EXPIRATION_TIME = 86400000; // 1 day in milliseconds
 
-    private static Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    private static String generateToken(String username) {
+    public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())

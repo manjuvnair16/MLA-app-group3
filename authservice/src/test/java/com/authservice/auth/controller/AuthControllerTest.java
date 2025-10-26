@@ -14,8 +14,11 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.authservice.auth.model.AuthResponseDTO;
+import com.authservice.auth.model.ErrorResponseDTO;
 import com.authservice.auth.model.User;
 import com.authservice.auth.repository.UserRepository;
+import com.authservice.auth.util.JwtService;
 
 public class AuthControllerTest {
 
@@ -29,7 +32,7 @@ public class AuthControllerTest {
     private static final String EMAIL_EXISTS_MSG = "Email already registered - please log in";
     private static final String USER_AUTHENTICATED_MSG = "User authenticated";
     private static final String INVALID_CREDENTIALS_MSG = "Invalid credentials";
-
+    private static final String JWT = "jwt-token-for-use-in-tests-123456789";
 
     // Mock dependencies
     @Mock
@@ -38,12 +41,16 @@ public class AuthControllerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private AuthController authController;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(jwtService.generateToken(any(String.class))).thenReturn(JWT);
     }
 
     private User createUser(String username, String password) {
@@ -139,10 +146,12 @@ public class AuthControllerTest {
             .thenReturn(true);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        AuthResponseDTO body = (AuthResponseDTO) response.getBody();
         verify(userRepository).findByUsername(USERNAME);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(USER_AUTHENTICATED_MSG, response.getBody());
+        assertEquals(USER_AUTHENTICATED_MSG, body.getMessage());
+        assertEquals(JWT, body.getToken());
     }
 
     @Test
@@ -156,10 +165,11 @@ public class AuthControllerTest {
             .thenReturn(false);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
         verify(userRepository).findByUsername(USERNAME);
 
         assertEquals(401, response.getStatusCodeValue());
-        assertEquals(INVALID_CREDENTIALS_MSG, response.getBody());
+        assertEquals(INVALID_CREDENTIALS_MSG, body.getMessage());
     }
 
     @Test
@@ -170,10 +180,11 @@ public class AuthControllerTest {
             .thenReturn(null);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
         verify(userRepository).findByUsername(USERNAME);
 
         assertEquals(401, response.getStatusCodeValue());
-        assertEquals(INVALID_CREDENTIALS_MSG, response.getBody());
+        assertEquals(INVALID_CREDENTIALS_MSG, body.getMessage());
     }
 
     @Test
@@ -184,10 +195,11 @@ public class AuthControllerTest {
             .thenReturn(null);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
         verify(userRepository).findByEmail(EMAIL);
 
         assertEquals(401, response.getStatusCodeValue());
-        assertEquals(INVALID_CREDENTIALS_MSG, response.getBody());
+        assertEquals(INVALID_CREDENTIALS_MSG, body.getMessage());
     }
 
     @Test
@@ -201,10 +213,12 @@ public class AuthControllerTest {
             .thenReturn(true);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        AuthResponseDTO body = (AuthResponseDTO) response.getBody();
         verify(userRepository).findByEmail(EMAIL);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(USER_AUTHENTICATED_MSG, response.getBody());
+        assertEquals(USER_AUTHENTICATED_MSG, body.getMessage());
+        assertEquals(JWT, body.getToken());
     }
 
     @Test
@@ -218,9 +232,10 @@ public class AuthControllerTest {
             .thenReturn(false);
 
         ResponseEntity<?> response = authController.authenticateUser(user);
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
         verify(userRepository).findByEmail(EMAIL);
 
         assertEquals(401, response.getStatusCodeValue());
-        assertEquals(INVALID_CREDENTIALS_MSG, response.getBody());
+        assertEquals(INVALID_CREDENTIALS_MSG, body.getMessage());
     }
 }
