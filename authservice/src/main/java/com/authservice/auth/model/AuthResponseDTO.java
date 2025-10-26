@@ -1,20 +1,20 @@
 package com.authservice.auth.model;
 
 public class AuthResponseDTO {
-    private String token;
+    private String jwt;
     private String message;
 
-    public AuthResponseDTO(String token, String message) {
-        this.token = token;
+    public AuthResponseDTO(String jwt, String message) {
+        this.jwt = jwt;
         this.message = message;
     }
 
-    public String getToken() {
-        return token;
+    public String getJwt() {
+        return jwt;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setJwt(String jwt) {
+        this.jwt = jwt;
     }
 
     public String getMessage() {

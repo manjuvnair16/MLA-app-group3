@@ -26,7 +26,9 @@ it('renders signup form', () => {
 });
 
 it('calls onSignup on successful signup', async () => {
-    axios.post.mockResolvedValue({ data: 'User registered successfully!' });
+    axios.post.mockResolvedValue({ 
+        status: 200, 
+        data: { jwt: 'test-jwt'} });
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@test.com' } });
     fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: 'John' } });
     fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: 'Doe' } });
@@ -55,7 +57,12 @@ it('does not submit when form fields are empty', async () => {
 });
 
 it('shows error message when email already registered', async () => {
-    axios.post.mockResolvedValue({ data: 'Email already registered - please log in' });
+    axios.post.mockRejectedValue({ 
+        response: {
+            status: 400,
+            data: { message: 'Email already registered - please log in' }
+        }
+    });
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@test.com' } });
     fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: 'John' } });
     fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: 'Doe' } });

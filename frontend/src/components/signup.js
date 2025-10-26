@@ -43,12 +43,13 @@ const Signup = ({ onSignup }) => {
         password: formData.password,
       };
 
-      const { data } = await axios.post(
+      const { status, data } = await axios.post(
         "http://localhost:8080/api/auth/signup",
         payload
       );
 
-      if (data === "User registered successfully!") {
+      if (status === 200 && data.jwt) {
+        localStorage.setItem("jwt", data.jwt);
         onSignup(formData.email);
       } else {
         setError(data);
@@ -56,7 +57,7 @@ const Signup = ({ onSignup }) => {
     } catch (err) {
       console.error("Error during registration", err);
       setError(
-        err.response?.data ||
+        err.response?.data.message ||
           "An error occurred during registration. Please try again."
       );
     }

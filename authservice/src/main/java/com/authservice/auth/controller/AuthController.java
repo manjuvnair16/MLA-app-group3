@@ -31,22 +31,28 @@ public class AuthController {
 
         if (user.getEmail() != null && !user.getEmail().isEmpty()) {
             // registration with email
-            if (userRepository.existsByEmail(user.getEmail())) {
-                return ResponseEntity.badRequest().body("Email already registered - please log in");
+            String email = user.getEmail();
+            if (userRepository.existsByEmail(email)) {
+                return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email already registered - please log in"));
             }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
-            return ResponseEntity.ok("User registered successfully!");
+            String jwt = jwtService.generateToken(email);
+            AuthResponseDTO response = new AuthResponseDTO(jwt, "User registered successfully!");
+            return ResponseEntity.ok(response);
         } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
             // legacy registration with username
-            if (userRepository.existsByUsername(user.getUsername())) {
-                return ResponseEntity.badRequest().body("User already exists - please log in");
+            String username = user.getUsername();
+            if (userRepository.existsByUsername(username)) {
+                return ResponseEntity.badRequest().body(new ErrorResponseDTO("User already exists - please log in"));
             }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
-            return ResponseEntity.ok("User registered successfully!");
+            String jwt = jwtService.generateToken(username);
+            AuthResponseDTO response = new AuthResponseDTO(jwt, "User registered successfully!");
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.badRequest().body("Username or email must be provided");
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Username or email must be provided"));
         }
     }
 

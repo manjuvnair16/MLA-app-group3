@@ -28,8 +28,8 @@ const Login = ({ onLogin }) => {
         payload
       );
 
-      if (status === 200 && data.token) {
-        localStorage.setItem("jwt", data.token);
+      if (status === 200 && data.jwt) {
+        localStorage.setItem("jwt", data.jwt);
         onLogin(email);
       }
       
@@ -37,7 +37,7 @@ const Login = ({ onLogin }) => {
       if (err.response.data.message && err.response.status === 401) {
         setError(err.response.data.message);
       } else {
-        setError('Failed to login');
+        setError("Failed to login");
       }
     }
   };

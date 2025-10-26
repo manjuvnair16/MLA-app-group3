@@ -78,10 +78,12 @@ public class AuthControllerTest {
             .thenReturn(ENCODED_PASSWORD);
 
         ResponseEntity<?> response = authController.registerUser(user);
+        AuthResponseDTO body = (AuthResponseDTO) response.getBody();
         verify(userRepository).existsByUsername(USERNAME);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(USER_REGISTERED_MSG, response.getBody());
+        assertEquals(USER_REGISTERED_MSG, body.getMessage());
+        assertEquals(JWT, body.getJwt());
         assertEquals(ENCODED_PASSWORD, user.getPassword());
         verify(userRepository).save(user);
     }
@@ -94,10 +96,11 @@ public class AuthControllerTest {
             .thenReturn(true);
 
         ResponseEntity<?> response = authController.registerUser(user);
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
         verify(userRepository).existsByUsername(USERNAME);
 
         assertEquals(400, response.getStatusCodeValue());
-        assertEquals(USER_EXISTS_MSG, response.getBody());
+        assertEquals(USER_EXISTS_MSG, body.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -111,10 +114,12 @@ public class AuthControllerTest {
             .thenReturn(ENCODED_PASSWORD);
 
         ResponseEntity<?> response = authController.registerUser(user);
+        AuthResponseDTO body = (AuthResponseDTO) response.getBody();
         verify(userRepository).existsByEmail(EMAIL);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(USER_REGISTERED_MSG, response.getBody());
+        assertEquals(USER_REGISTERED_MSG, body.getMessage());
+        assertEquals(JWT, body.getJwt());
         assertEquals(ENCODED_PASSWORD, user.getPassword());
         verify(userRepository).save(user);
     }
@@ -127,10 +132,11 @@ public class AuthControllerTest {
             .thenReturn(true);
 
         ResponseEntity<?> response = authController.registerUser(user);
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
         verify(userRepository).existsByEmail(EMAIL);
 
         assertEquals(400, response.getStatusCodeValue());
-        assertEquals(EMAIL_EXISTS_MSG, response.getBody());
+        assertEquals(EMAIL_EXISTS_MSG, body.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -151,7 +157,7 @@ public class AuthControllerTest {
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(USER_AUTHENTICATED_MSG, body.getMessage());
-        assertEquals(JWT, body.getToken());
+        assertEquals(JWT, body.getJwt());
     }
 
     @Test
@@ -218,7 +224,7 @@ public class AuthControllerTest {
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(USER_AUTHENTICATED_MSG, body.getMessage());
-        assertEquals(JWT, body.getToken());
+        assertEquals(JWT, body.getJwt());
     }
 
     @Test
