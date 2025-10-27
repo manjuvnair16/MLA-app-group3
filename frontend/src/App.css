@@ -277,3 +277,42 @@ input#duration,
     justify-content: center;
   }
 }
+
+/* Speech to text */
+.speech-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Left align */
+  margin-top: 0.5rem;
+}
+
+.mic-button {
+  background-color: var(--color-primary) !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  padding: 18px !important;
+  box-shadow: 0 6px 18px rgba(123, 147, 255, 0.35) !important;
+  transition: all 0.2s ease;
+}
+
+.mic-button:hover {
+  background-color: var(--color-primary-600) !important;
+  box-shadow: 0 10px 24px rgba(123, 147, 255, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+.mic-button.active {
+  background-color: #dc2626 !important; /* red when listening */
+  box-shadow: 0 10px 22px rgba(255, 99, 99, 0.45) !important;
+}
+
+.speech-textarea {
+  width: 100%;
+  margin-top: 0.4rem;
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: none;
+  font-family: inherit;
+}
