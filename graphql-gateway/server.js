@@ -18,6 +18,8 @@ import { AnalyticsService } from './src/services/analytics/datasource/analyticsS
 import { config } from './src/config/index.js';
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+// Log presence of JWT secret for debugging (NOT the value itself)
+console.log('JWT_SECRET_KEY present:', !!JWT_SECRET_KEY);
 
 /**
  * Helper function to verify JWT
@@ -163,10 +165,22 @@ async function start() {
       cors({ origin: config.corsOrigins, credentials: true }),
       bodyParser.json(),
       expressMiddleware(server, {
-        context: async ({req}) => {
+        context: async ({ req }) => {
           const authHeader = req.headers.authorization;
-          const jwtPayload = verifyJWT(authHeader);
-          return { authHeader, jwtPayload }
+          let jwtPayload = null;
+
+          // Only attempt verification if an Authorization header is present
+          // This prevents introspection (used by Apollo) from being blocked
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            try {
+              jwtPayload = verifyJWT(authHeader);
+            } catch (err) {
+              // Log warning but do not throw to allow playground/introspection
+              console.warn('JWT verification failed:', err.message);
+            }
+          }
+
+          return { authHeader, jwtPayload };
         }
       })
     );
