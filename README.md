@@ -12,19 +12,6 @@ The Activity Tracking functionality uses the MERN stack (MongoDB, Express.js, Re
 - Each group member should clone the forked version of the repository to their local environment or GitHub Codespace.
 - All project work should be done in your group's fork.
 
-**❗ Important** - Follow the next steps to add the **JWT Secret Key** needed for the app to send/receive requests.
-- Before making any changes, run the following commands from the root directory:
-    - `git update-index --assume-unchanged activity-tracking/.env`
-    - `git update-index --assume-unchanged analytics/.env`
-    - `git update-index --assume-unchanged graphql-gateway/.env`
-    - `git update-index --assume-unchanged authservice/src/main/resources/application.properties`
-    - This ensures that changes to the env files will not be committed.
-- Copy the JWT Secret Key from the group's shared Google Drive.
-- For **activity-tracking**, **analytics**, and **graphql-gateway**, go into each directory's `.env` file, add the following line and paste the key inside the quotation marks:
-    - `JWT_SECRET_KEY = "KEY-GOES-HERE"`
-- For **authservice**, go to `authservice/src/main/resources/application.properties`, add the following line to the file and paste the key after the equals sign:
-    - `jwt.secret.key=KEY-GOES-HERE`
-
 ### Current Features
 
 - User registration for personalized tracking
