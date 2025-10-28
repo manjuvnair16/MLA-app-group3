@@ -220,10 +220,11 @@ const TrackExercise = ({ currentUser }) => {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    const dataToSubmit = {
-      username: currentUser,
-      ...state,
-    };
+// Ensure ISO string but in **GMT** (not browser local)
+const dataToSubmit = {
+  username: currentUser,
+  ...state,
+};
 
     try {
       const response = await trackExercise(dataToSubmit);
