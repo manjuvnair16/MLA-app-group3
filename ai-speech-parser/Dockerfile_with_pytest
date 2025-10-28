@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY . .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 5051
+
+# Install testing dependencies (pytest, pytest-cov, etc.)
+# Build stage test - run tests
+RUN pip3 install pytest pytest-cov && rm -rf /root/.cache
+# Default command to run tests
+CMD ["pytest", "--maxfail=1", "--disable-warnings", "-q"]
+
+
