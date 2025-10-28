@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import rateLimit from "express-rate-limit";
+import depthLimit from "graphql-depth-limit";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
@@ -155,7 +156,8 @@ async function start() {
           includeCookies: false
         })
       ],
-      formatError: formatGraphQLError
+      formatError: formatGraphQLError,
+      validationRules: [depthLimit(6)] // Limit query depth to 6 levels
     });
     
     await server.start();
