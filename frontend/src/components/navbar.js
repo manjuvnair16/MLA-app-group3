@@ -1,10 +1,10 @@
 import React from 'react';
 import { Navbar, Nav } from 'react-bootstrap';
-import { useNavigate, useLocation } from 'react-router-dom';  /* MN_scrum_13 - active tab diff colour  added useLocation */
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const NavbarComponent = ({ onLogout }) => {
   const navigate = useNavigate();
-  const location = useLocation(); // MN_scrum_13 - active tab colour
+  const location = useLocation();
 
   const onNavigate = (route) => {
     console.log('Navigating to:', route);  
@@ -30,19 +30,19 @@ const NavbarComponent = ({ onLogout }) => {
         <Nav className="mr-auto">
         <Nav>
           <Nav.Link 
-              className={`custom-nav-link ${location.pathname === '/trackExercise' ? 'active' : ''}`} // MN_scrum_13 
+              className={`custom-nav-link ${location.pathname === '/trackExercise' ? 'active' : ''}`}
               onClick={() => onNavigate('TrackExercise')}>
               Track New Exercise
           </Nav.Link>
           <Nav.Link 
-              className={`custom-nav-link ${location.pathname === '/statistics' ? 'active' : ''}`} // MN_scrum_13 
+              className={`custom-nav-link ${location.pathname === '/statistics' ? 'active' : ''}`}
               onClick={() => onNavigate('Statistics')}>
               Statistics
           </Nav.Link>
           <Nav.Link 
-              className={`custom-nav-link ${location.pathname === '/journal' ? 'active' : ''}`} // MN_scrum_13 
+              className={`custom-nav-link ${location.pathname === '/journal' ? 'active' : ''}`}
               onClick={() => onNavigate('Journal')}>
-              Weekly Journal
+              Journal
           </Nav.Link>
           <Nav.Link className="custom-nav-link" onClick={onLogout}>Logout
           </Nav.Link>
