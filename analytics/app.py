@@ -9,9 +9,16 @@ import traceback
 import logging
 import os
 from datetime import datetime, timedelta
+from bson import ObjectId
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}},
+CORS(app, resources={r"/*": {"origins": "*"},
+                     r"/api/*": {"origins": "*"},
+                     r"/stats/*": {"origins": "*"}},
      methods="GET,HEAD,POST,OPTIONS,PUT,PATCH,DELETE")
 
 load_dotenv()
@@ -24,10 +31,14 @@ db = client[mongo_db]
 
 @app.route('/')
 def index():
-    exercises = db.exercises.find()
-    exercises_list = list(exercises)
-    return json_util.dumps(exercises_list)
-
+    try:
+        exercises = db.exercises.find()
+        exercises_list = list(exercises)
+        return json_util.dumps(exercises_list)
+    except Exception as e:
+        logging.error(f"Error fetching index data: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
 
 @app.route('/stats')
 def stats():
@@ -61,8 +72,13 @@ def stats():
         }
     ]
 
-    stats = list(db.exercises.aggregate(pipeline))
-    return jsonify(stats=stats)
+    try:
+        stats = list(db.exercises.aggregate(pipeline))
+        return jsonify(stats=stats)
+    except Exception as e:
+        logging.error(f"Error fetching all stats: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
 
 
 @app.route('/stats/<username>', methods=['GET'])
@@ -100,8 +116,13 @@ def user_stats(username):
         }
     ]
 
-    stats = list(db.exercises.aggregate(pipeline))
-    return jsonify(stats=stats)
+    try:
+        stats = list(db.exercises.aggregate(pipeline))
+        return jsonify(stats=stats)
+    except Exception as e:
+        logging.error(f"Error fetching user stats for {username}: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
 
 # Fetch total duration aggregated by day for the last 7 days
 @app.route('/stats/daily_trend/<username>', methods=['GET'])
@@ -165,7 +186,6 @@ def daily_trend_stats(username):
     try:
         stats = list(db.exercises.aggregate(pipeline))
         
-        # Post-process - To-Do: Fill in days with zero duration to ensure a continuous 7-day chart line
         date_data = {item['date']: item for item in stats}
         full_range = []
         current = start_date
@@ -192,7 +212,6 @@ def daily_trend_stats(username):
 
 @app.route('/stats/weekly/', methods=['GET'])
 def weekly_journal_stats():
-    # Frontend sends parameters via query: ?user={currentUser}&start={date}&end={date}
     username = request.args.get('user')
     start_date_str = request.args.get('start')
     end_date_str = request.args.get('end')
@@ -234,7 +253,6 @@ def weekly_journal_stats():
     ]
 
     try:
-        # The Journal component expects the result in the 'stats' key:
         stats = list(db.exercises.aggregate(pipeline))
         return jsonify(stats=stats)
     except Exception as e:
@@ -250,7 +268,7 @@ def get_start_of_week():
     start_of_week = today - timedelta(days=today.weekday())
     return start_of_week
     
-# NEW ENDPOINT: Provides Total Duration and Distribution for the CURRENT WEEK
+# Provides Total Duration and Distribution for the CURRENT WEEK
 @app.route('/stats/weekly_summary/<username>', methods=['GET'])
 def weekly_summary_stats(username):
     start_date = get_start_of_week()
@@ -301,7 +319,144 @@ def weekly_summary_stats(username):
         traceback.print_exc()
         return jsonify(error="An internal error occurred"), 500
 
+@app.route('/api/activities/range', methods=['GET'])
+def get_activities_by_range():
+    username = request.args.get('user')
+    start_date_str = request.args.get('start')
+    end_date_str = request.args.get('end')
+
+    if not all([username, start_date_str, end_date_str]):
+        return jsonify(error="Missing required query parameters: user, start, end"), 400
+
+    try:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc) + timedelta(days=1)
+    except Exception:
+        return jsonify(error="Invalid date format. Use YYYY-MM-DD."), 400
+
+    query = {
+        "username": username,
+        "date": {"$gte": start_date, "$lt": end_date}
+    }
+
+    try:
+        # sort newest first
+        activities_list = list(db.exercises.find(query).sort("date", -1))
+
+        uk = ZoneInfo("Europe/London")
+        out = []
+        for a in activities_list:
+            # group date
+            dt = a.get("date")
+            if isinstance(dt, datetime):
+                date_str = dt.astimezone(uk).strftime("%Y-%m-%d")
+            else:
+                date_str = a["_id"].generation_time.replace(tzinfo=timezone.utc).astimezone(uk).strftime("%Y-%m-%d")
+
+            created = a.get("created_at")
+            if not isinstance(created, datetime):
+                # For old records without created_at, derive from ObjectId and UPDATE the record
+                created = a["_id"].generation_time.replace(tzinfo=timezone.utc)
+                # Store it permanently so we don't recalculate next time
+                db.exercises.update_one(
+                    {"_id": a["_id"]},
+                    {"$set": {"created_at": created}}
+                )
+                
+            time_str = created.astimezone(uk).strftime("%H:%M")
+
+            out.append({
+                "id": str(a["_id"]),
+                "username": a.get("username"),
+                "date": date_str,
+                "time": time_str,
+                "activityType": a.get("exerciseType"),
+                "duration": a.get("duration"),
+                "comments": a.get("description", "")
+            })
+
+        return jsonify(out)
+    except Exception as e:
+        logging.error(f"activities/range error: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal server error occurred"), 500
+
+
+@app.route('/api/activities/<activity_id>', methods=['PATCH'])
+def update_activity_comment(activity_id):
+    try:
+        body = request.get_json(silent=True) or {}
+        comments = body.get('comments', body.get('description'))
+        if comments is None:
+            return jsonify(error="comments is required"), 400
+
+        ors = []
+        try:
+            ors.append({'_id': ObjectId(activity_id)})
+        except Exception:
+            pass
+        ors.append({'_id': activity_id})   # in case _id is stored as string
+        ors.append({'id': activity_id})    # in case 'id' field is used
+
+        query = {'$or': ors}
+
+        result = db.exercises.update_one(query, {'$set': {'description': comments}})
+        app.logger.info(
+            f"PATCH /api/activities/{activity_id} matched={result.matched_count} modified={result.modified_count}"
+        )
+
+        if result.matched_count == 0:
+            return jsonify(error="activity not found", tried=query), 404
+
+        return jsonify(ok=True)
+    except Exception as e:
+        logging.error(f"Error updating activity note: {e}")
+        traceback.print_exc()
+        return jsonify(error="internal error"), 500
+
+
+@app.post("/api/activities")
+def create_activity():
+    body = request.get_json(force=True)
+
+    username = body.get("username")
+    exerciseType = body.get("exerciseType")
+    description = body.get("description", "")
+    duration = body.get("duration", 0)
+    date_in = body.get("date") # expected in ISO format or "YYYY-MM-DD"
+
+    if not all([username, exerciseType, date_in]):
+        return jsonify(error="username, exerciseType and date are required"), 400
+
+    # normalise the chosen calendar date to midnight UTC
+    if isinstance(date_in, str):
+        # accepts "YYYY-MM-DD" or ISO
+        try:
+            if len(date_in) == 10:
+                dt = datetime.strptime(date_in, "%Y-%m-%d")
+            else:
+                dt = datetime.fromisoformat(date_in.replace("Z", "+00:00"))
+        except Exception:
+            return jsonify(error="date must be YYYY-MM-DD or ISO"), 400
+    else:
+        dt = datetime.timezone.utc.localize()
+
+    date_utc = dt.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+
+    doc = {
+        "username": username,
+        "exerciseType": exerciseType,
+        "description": description,
+        "duration": int(duration),
+        "date": date_utc,
+        # fixed time of logging set by the server once
+        "created_at": datetime.now(timezone.utc),
+    }
+
+    db.exercises.insert_one(doc)
+    return jsonify(ok=True)
 
 
 if __name__ == "__main__":
+
     app.run(debug=True, host='0.0.0.0', port=5050)
