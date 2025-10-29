@@ -352,6 +352,7 @@ def weekly_summary_stats(username):
         return jsonify(error="An internal error occurred"), 500
 
 @app.route('/api/activities/range', methods=['GET'])
+@token_required
 def get_activities_by_range():
     username = request.args.get('user')
     start_date_str = request.args.get('start')
@@ -415,6 +416,7 @@ def get_activities_by_range():
 
 
 @app.route('/api/activities/<activity_id>', methods=['PATCH'])
+@token_required
 def update_activity_comment(activity_id):
     try:
         body = request.get_json(silent=True) or {}
@@ -448,6 +450,7 @@ def update_activity_comment(activity_id):
 
 
 @app.post("/api/activities")
+@token_required
 def create_activity():
     body = request.get_json(force=True)
 
