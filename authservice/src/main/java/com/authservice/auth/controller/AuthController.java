@@ -1,6 +1,8 @@
 package com.authservice.auth.controller;
 
+import com.authservice.auth.model.UpdateUserRequestDTO;
 import com.authservice.auth.model.User;
+import com.authservice.auth.model.UserResponseDTO;
 import com.authservice.auth.model.AuthResponseDTO;
 import com.authservice.auth.model.ErrorResponseDTO;
 import com.authservice.auth.repository.UserRepository;
@@ -24,6 +26,61 @@ public class AuthController {
 
     @Autowired
     private JwtService jwtService;
+
+    @GetMapping("/user")
+    public ResponseEntity<?> getUserByEmail(@RequestParam("email") String email) {
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body("Email is required");
+        }
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName());
+            return ResponseEntity.ok(userDto);
+        } else {
+            return ResponseEntity.status(404).body("User not found");
+        }
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable("id") String id) {
+        if (id == null || id.isEmpty()) {
+            return ResponseEntity.badRequest().body("User ID is required");
+        }
+        User user = userRepository.findById(id).orElse(null);
+        if (user != null) {
+            UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName());
+            return ResponseEntity.ok(userDto);
+        } else {
+            return ResponseEntity.status(404).body("User not found");
+        }
+    }
+
+    @PatchMapping("/user/{id}")
+    public ResponseEntity<?> updateUserDetails(@PathVariable("id") String id, @RequestBody UpdateUserRequestDTO request) {
+        if (id == null || id.isEmpty()) {
+            return ResponseEntity.badRequest().body("User ID is required");
+        }
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                return ResponseEntity.badRequest().body("Email already in use");
+            }
+            user.setEmail(request.getEmail());
+        }
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+
+        userRepository.save(user);
+        return ResponseEntity.ok("User details updated successfully");
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody User user) {

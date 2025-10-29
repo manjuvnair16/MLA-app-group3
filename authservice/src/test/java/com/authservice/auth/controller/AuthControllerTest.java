@@ -1,6 +1,7 @@
 package com.authservice.auth.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,9 +15,13 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
+
+import com.authservice.auth.model.UpdateUserRequestDTO;
 import com.authservice.auth.model.AuthResponseDTO;
 import com.authservice.auth.model.ErrorResponseDTO;
 import com.authservice.auth.model.User;
+import com.authservice.auth.model.UserResponseDTO;
 import com.authservice.auth.repository.UserRepository;
 import com.authservice.auth.service.JwtService;
 
@@ -27,6 +32,9 @@ public class AuthControllerTest {
     private static final String WRONG_PASSWORD = "wrongPassword";
     private static final String ENCODED_PASSWORD = "encodedPassword";
     private static final String EMAIL = "testEmail@test.com";
+    private static final String USER_ID = "testId";
+    private static final String FIRST_NAME = "Jane";
+    private static final String LAST_NAME = "Doe";
     private static final String USER_REGISTERED_MSG = "User registered successfully!";
     private static final String USER_EXISTS_MSG = "User already exists - please log in";
     private static final String EMAIL_EXISTS_MSG = "Email already registered - please log in";
@@ -62,8 +70,11 @@ public class AuthControllerTest {
 
     private User createUserWithEmail(String email, String password) {
         User user = new User();
+        user.setId(USER_ID);
         user.setEmail(email);
         user.setPassword(password);
+        user.setFirstName(FIRST_NAME);
+        user.setLastName(LAST_NAME);
         return user;
     }
 
@@ -243,5 +254,122 @@ public class AuthControllerTest {
 
         assertEquals(401, response.getStatusCodeValue());
         assertEquals(INVALID_CREDENTIALS_MSG, body.getMessage());
+    }
+
+    // Tests for user
+    @Test
+    public void getUserByEmail_whenUserExists_returnsUser() {
+        User user = createUserWithEmail(EMAIL, PASSWORD);
+
+        when(userRepository.findByEmail(EMAIL))
+            .thenReturn(user);
+
+        ResponseEntity<?> response = authController.getUserByEmail(EMAIL);
+        verify(userRepository).findByEmail(EMAIL);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody() instanceof UserResponseDTO);
+
+        UserResponseDTO userDto = (UserResponseDTO) response.getBody();
+        assertEquals(user.getId(), userDto.getId());
+        assertEquals(user.getEmail(), userDto.getEmail());
+        assertEquals(user.getFirstName(), userDto.getFirstName());
+        assertEquals(user.getLastName(), userDto.getLastName());
+    }
+
+    @Test
+    public void getUserByEmail_whenUserDoesNotExist_returnsNotFound() {
+        when(userRepository.findByEmail(EMAIL))
+            .thenReturn(null);
+
+        ResponseEntity<?> response = authController.getUserByEmail(EMAIL);
+        verify(userRepository).findByEmail(EMAIL);
+
+        assertEquals(404, response.getStatusCodeValue());
+        assertEquals("User not found", response.getBody());
+    }
+
+    @Test
+    public void getUserByEmail_whenEmailIsNull_returnsBadRequest() {
+        ResponseEntity<?> response = authController.getUserByEmail(null);
+        assertEquals(400, response.getStatusCodeValue());
+        assertEquals("Email is required", response.getBody());
+    }
+
+    @Test
+    public void getUserById_whenUserExists_returnsUser() {
+        User user = createUserWithEmail(EMAIL, PASSWORD);
+        when(userRepository.findById(user.getId()))
+            .thenReturn(Optional.of(user));
+
+        ResponseEntity<?> response = authController.getUserById(user.getId());
+        verify(userRepository).findById(user.getId());
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody() instanceof UserResponseDTO);
+
+        UserResponseDTO userDto = (UserResponseDTO) response.getBody();
+        assertEquals(user.getId(), userDto.getId());
+        assertEquals(user.getEmail(), userDto.getEmail());
+        assertEquals(user.getFirstName(), userDto.getFirstName());
+        assertEquals(user.getLastName(), userDto.getLastName());
+    }
+
+    @Test
+    public void getUserById_whenUserDoesNotExist_returnsNotFound() {    
+        when(userRepository.findById(USER_ID))
+            .thenReturn(Optional.empty());
+
+        ResponseEntity<?> response = authController.getUserById(USER_ID);
+        verify(userRepository).findById(USER_ID);
+
+        assertEquals(404, response.getStatusCodeValue());
+        assertEquals("User not found", response.getBody());
+    }
+
+    @Test
+    public void getUserById_whenIdIsNull_returnsBadRequest() {
+        ResponseEntity<?> response = authController.getUserById(null);
+        assertEquals(400, response.getStatusCodeValue());
+        assertEquals("User ID is required", response.getBody());
+    
+    }
+
+    @Test
+    public void updateUserDetails_whenUserDoesNotExist_returnsNotFound() {
+        UpdateUserRequestDTO updateRequest = new UpdateUserRequestDTO();
+        updateRequest.setFirstName("NewFirstName");
+
+        when(userRepository.findById(USER_ID))
+            .thenReturn(Optional.empty());
+
+        ResponseEntity<?> response = authController.updateUserDetails(USER_ID, updateRequest);
+        verify(userRepository).findById(USER_ID);
+
+        assertEquals(404, response.getStatusCodeValue());
+        assertEquals("User not found", response.getBody());
+    }
+
+    @Test
+    public void updateUserDetails_whenUserExists_updatesUser() {
+        User user = createUserWithEmail(EMAIL, PASSWORD);
+        UpdateUserRequestDTO updateRequest = new UpdateUserRequestDTO();
+        updateRequest.setFirstName("NewFirstName");
+        updateRequest.setLastName("NewLastName");
+
+        when(userRepository.findById(USER_ID))
+            .thenReturn(Optional.of(user));
+
+        ResponseEntity<?> response = authController.updateUserDetails(USER_ID, updateRequest);
+        verify(userRepository).findById(USER_ID);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("User details updated successfully", response.getBody());
+        verify(userRepository).save(user);
+        assertEquals("NewFirstName", user.getFirstName());
+        assertEquals("NewLastName", user.getLastName());
+        assertEquals(USER_ID, user.getId());
+        assertEquals(EMAIL, user.getEmail());
+        assertEquals(PASSWORD, user.getPassword());
     }
 }
