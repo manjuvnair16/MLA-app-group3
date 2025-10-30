@@ -17,7 +17,10 @@
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "graphql": "^16.9.0"
+    "express-rate-limit": "^7.1.5",
+    "graphql": "^16.9.0",
+    "graphql-depth-limit": "^1.1.0",
+    "prom-client": "^14.2.0"
   },
   "devDependencies": {
     "graphql": "^16.9.0"
