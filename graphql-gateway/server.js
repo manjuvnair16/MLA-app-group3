@@ -1,6 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import jwt from "jsonwebtoken";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
@@ -13,6 +16,26 @@ import { analyticsResolvers } from './src/services/analytics/resolvers/index.js'
 import { ActivityService } from './src/services/activity/datasource/activityService.js';
 import { AnalyticsService } from './src/services/analytics/datasource/analyticsService.js';
 import { config } from './src/config/index.js';
+
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+// Log presence of JWT secret for debugging (NOT the value itself)
+console.log('JWT_SECRET_KEY present:', !!JWT_SECRET_KEY);
+
+/**
+ * Helper function to verify JWT
+ */
+function verifyJWT(authHeader) {
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw new Error('Missing or malformed Authorization header')
+  }
+  
+  const token = authHeader.split(' ')[1];
+  try {
+    return jwt.verify(token, JWT_SECRET_KEY);
+  } catch (err) {
+    throw new Error('Invalid or expired token');
+  }
+}
 
 /**
  * GraphQL Schema Configuration
@@ -141,7 +164,25 @@ async function start() {
     app.use("/graphql",
       cors({ origin: config.corsOrigins, credentials: true }),
       bodyParser.json(),
-      expressMiddleware(server)
+      expressMiddleware(server, {
+        context: async ({ req }) => {
+          const authHeader = req.headers.authorization;
+          let jwtPayload = null;
+
+          // Only attempt verification if an Authorization header is present
+          // This prevents introspection (used by Apollo) from being blocked
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            try {
+              jwtPayload = verifyJWT(authHeader);
+            } catch (err) {
+              // Log warning but do not throw to allow playground/introspection
+              console.warn('JWT verification failed:', err.message);
+            }
+          }
+
+          return { authHeader, jwtPayload };
+        }
+      })
     );
     
     // Redirect root to GraphQL playground

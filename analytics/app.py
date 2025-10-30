@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
-
-
+import jwt
+from functools import wraps
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"},
@@ -24,12 +24,39 @@ CORS(app, resources={r"/*": {"origins": "*"},
 load_dotenv()
 mongo_uri = os.getenv('MONGO_URI')
 mongo_db = os.getenv('MONGO_DB')
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 
 client = MongoClient(mongo_uri)
 db = client[mongo_db]
 
+# JWT verification
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get('Authorization', None)
+        if not auth_header:
+            return jsonify({'error': 'Missing token'}), 401
+        
+        try:
+            token = auth_header.split(' ')[1]
+            decoded_token = jwt.decode(token, JWT_SECRET_KEY, algorithms=['HS256'])
+            request.user = decoded_token
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+        
+        return f(*args, **kwargs)
+    return decorated
+
+# Public health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify(status='healthy', timestamp=datetime.now().isoformat()), 200
+
 
 @app.route('/')
+@token_required
 def index():
     try:
         exercises = db.exercises.find()
@@ -41,6 +68,7 @@ def index():
         return jsonify(error="An internal error occurred"), 500
 
 @app.route('/stats')
+@token_required
 def stats():
     pipeline = [
         {
@@ -82,6 +110,7 @@ def stats():
 
 
 @app.route('/stats/<username>', methods=['GET'])
+@token_required
 def user_stats(username):
     pipeline = [
         {
@@ -126,6 +155,7 @@ def user_stats(username):
 
 # Fetch total duration aggregated by day for the last 7 days
 @app.route('/stats/daily_trend/<username>', methods=['GET'])
+@token_required
 def daily_trend_stats(username):
     # Calculate the start date (7 days ago)
     end_date = datetime.now()
@@ -211,6 +241,7 @@ def daily_trend_stats(username):
         return jsonify(error="An internal error occurred"), 500
 
 @app.route('/stats/weekly/', methods=['GET'])
+@token_required
 def weekly_journal_stats():
     username = request.args.get('user')
     start_date_str = request.args.get('start')
@@ -270,6 +301,7 @@ def get_start_of_week():
     
 # Provides Total Duration and Distribution for the CURRENT WEEK
 @app.route('/stats/weekly_summary/<username>', methods=['GET'])
+@token_required
 def weekly_summary_stats(username):
     start_date = get_start_of_week()
     end_date = datetime.now()
@@ -320,6 +352,7 @@ def weekly_summary_stats(username):
         return jsonify(error="An internal error occurred"), 500
 
 @app.route('/api/activities/range', methods=['GET'])
+@token_required
 def get_activities_by_range():
     username = request.args.get('user')
     start_date_str = request.args.get('start')
@@ -383,6 +416,7 @@ def get_activities_by_range():
 
 
 @app.route('/api/activities/<activity_id>', methods=['PATCH'])
+@token_required
 def update_activity_comment(activity_id):
     try:
         body = request.get_json(silent=True) or {}
@@ -416,6 +450,7 @@ def update_activity_comment(activity_id):
 
 
 @app.post("/api/activities")
+@token_required
 def create_activity():
     body = request.get_json(force=True)
 

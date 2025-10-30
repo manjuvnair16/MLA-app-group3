@@ -13,9 +13,9 @@ const queryResolvers = {
   /**
    * Get all exercises
    */
-  exercises: async () => {
+  exercises: async (_, __, context) => {
     try {
-      const result = await activityService.getAllExercises();
+      const result = await activityService.getAllExercises(context);
       return result || [];
     } catch (error) {
       console.error('Error in exercises resolver:', error);
@@ -26,9 +26,9 @@ const queryResolvers = {
   /**
    * Get exercise by ID
    */
-  exercise: async (_, { id }) => {
+  exercise: async (_, { id }, context) => {
     try {
-      const result = await activityService.getExerciseById(id);
+      const result = await activityService.getExerciseById(id, context);
       return result;
     } catch (error) {
       console.error(`Error in exercise resolver for ID ${id}:`, error);
@@ -44,10 +44,10 @@ const mutationResolvers = {
   /**
    * Add a new exercise
    */
-  addExercise: async (_, { input }) => {
+  addExercise: async (_, { input }, context) => {
     try {
       return await retryWithFallback(async () => {
-        return await activityService.addExercise(input);
+        return await activityService.addExercise(input, context);
       });
     } catch (error) {
       handleServiceError(error, 'add exercise');
@@ -57,10 +57,10 @@ const mutationResolvers = {
   /**
    * Update an existing exercise
    */
-  updateExercise: async (_, { id, input }) => {
+  updateExercise: async (_, { id, input }, context) => {
     try {
       return await retryWithFallback(async () => {
-        return await activityService.updateExercise(id, input);
+        return await activityService.updateExercise(id, input, context);
       });
     } catch (error) {
       handleServiceError(error, 'update exercise');
@@ -70,10 +70,10 @@ const mutationResolvers = {
   /**
    * Delete an exercise
    */
-  deleteExercise: async (_, { id }) => {
+  deleteExercise: async (_, { id }, context) => {
     try {
       return await retryWithFallback(async () => {
-        return await activityService.deleteExercise(id);
+        return await activityService.deleteExercise(id, context);
       });
     } catch (error) {
       handleServiceError(error, 'delete exercise');

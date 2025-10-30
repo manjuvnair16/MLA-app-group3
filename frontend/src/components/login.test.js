@@ -23,7 +23,10 @@ it('renders login form', () => {
 });
 
 it('calls onLogin on successful login', async () => {
-    axios.post.mockResolvedValue({ status: 200 });
+    axios.post.mockResolvedValue({ 
+        status: 200, 
+        data: { jwt: 'test-jwt'} 
+    });
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@test.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /Login/i }));
@@ -32,10 +35,15 @@ it('calls onLogin on successful login', async () => {
 });
 
 it('shows error message on incorrect password', async () => {
-    axios.post.mockRejectedValue({ response: { status: 401, data: 'Invalid credentials' } });
+    axios.post.mockRejectedValue({ 
+        response: { 
+            status: 401, 
+            data: { message: 'Email or password is incorrect - please try again' } 
+        } 
+    });
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@test.com' } });
     fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: 'wrongpassword' } });
     fireEvent.click(screen.getByRole('button', { name: /Login/i }));
 
-    await waitFor(() => expect(screen.getByText(/Username or password is incorrect/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Email or password is incorrect - please try again/i)).toBeInTheDocument());
 });

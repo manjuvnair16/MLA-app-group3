@@ -7,27 +7,30 @@ export class AnalyticsService {
     this.baseURL = ANALYTICS_URL;
   }
 
-  async getAllStats() {
+  async getAllStats(context) {
     const { data } = await axios.get(`${this.baseURL}/stats`, {
+      headers: { Authorization: context.authHeader },
       timeout: 5000
     });
     return data.stats || [];
   }
 
-  async getUserStats(username) {
+  async getUserStats(username, context) {
     const { data } = await axios.get(`${this.baseURL}/stats/${username}`, {
+      headers: { Authorization: context.authHeader },
       timeout: 5000
     });
     return data.stats || [];
   }
 
-  async getWeeklyStats(username, startDate, endDate) {
+  async getWeeklyStats(username, startDate, endDate, context) {
     const { data } = await axios.get(`${this.baseURL}/stats/weekly/`, {
       params: {
         user: username,
         start: startDate,
         end: endDate
       },
+      headers: { Authorization: context.authHeader },
       timeout: 5000
     });
     return data.stats || [];
@@ -35,7 +38,7 @@ export class AnalyticsService {
 
   async healthCheck() {
     try {
-      await axios.get(`${this.baseURL}/stats`, { timeout: 3000 });
+      await axios.get(`${this.baseURL}/health`, { timeout: 3000 });
       return { status: 'healthy', analyticsService: 'connected' };
     } catch (error) {
       return { 
