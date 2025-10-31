@@ -11,6 +11,7 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
 import { Registry, Counter, Histogram, collectDefaultMetrics } from "prom-client";
+import { createComplexityPlugin } from './src/middleware/complexityPlugin.js';
 
 // Import service components
 import { activityTypeDefs } from './src/services/activity/schema/index.js';
@@ -277,6 +278,7 @@ async function start() {
           embed: true,      
           includeCookies: false
         }),
+        createComplexityPlugin(1500), // Add complexity limiting with max 1500 points
         {
           requestDidStart(requestContext) {
             const startTime = Date.now();
