@@ -7,11 +7,13 @@ const GRAPHQL_ENDPOINT = `${SERVER_URL}/graphql`;
 const HEALTH_ENDPOINT = `${SERVER_URL}/health`;
 
 // Security headers to verify
+// Note: CSP is disabled for Apollo Sandbox compatibility
+// Frameguard changed from DENY to SAMEORIGIN for Apollo Sandbox
 const requiredHeaders = {
   'x-content-type-options': 'nosniff',
-  'x-frame-options': 'DENY',
+  'x-frame-options': 'SAMEORIGIN', // Changed from DENY to allow Apollo Sandbox
   'x-xss-protection': '1; mode=block',
-  'content-security-policy': /default-src 'self'/,
+  // 'content-security-policy' is disabled for Apollo Sandbox compatibility
   'strict-transport-security': /max-age=31536000/,
 };
 
@@ -86,6 +88,15 @@ async function testSecurityHeaders(endpoint, description) {
       }
     }
     
+    // Check that CSP is NOT present (disabled for Apollo Sandbox)
+    if (lowerCaseHeaders['content-security-policy']) {
+      console.log(`      ⚠️  content-security-policy: Present (but should be disabled for Apollo Sandbox)`);
+      console.log(`         Value: ${lowerCaseHeaders['content-security-policy'].substring(0, 80)}...`);
+      // Don't fail the test for this, just warn
+    } else {
+      console.log(`      ℹ️  content-security-policy: Correctly absent (disabled for Apollo Sandbox compatibility)`);
+    }
+    
     // Test forbidden headers
     console.log('\n   🚫 Checking forbidden headers:');
     let forbiddenFound = false;
@@ -158,9 +169,9 @@ async function runSecurityHeadersTests() {
   console.log('=' .repeat(60));
   console.log('\nThis test verifies that the following security headers are properly set:');
   console.log('  • X-Content-Type-Options: nosniff (prevents MIME type sniffing)');
-  console.log('  • X-Frame-Options: DENY (prevents frame embedding)');
+  console.log('  • X-Frame-Options: SAMEORIGIN (allows same-origin frames for Apollo Sandbox)');
   console.log('  • X-XSS-Protection: 1; mode=block (XSS protection)');
-  console.log('  • Content-Security-Policy (CSP for XSS and injection protection)');
+  console.log('  • Content-Security-Policy: DISABLED (disabled for Apollo Sandbox compatibility)');
   console.log('  • Strict-Transport-Security (HSTS)');
   console.log('  • X-Powered-By should NOT be present (hidden)');
   
