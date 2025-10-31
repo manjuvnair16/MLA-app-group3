@@ -3,7 +3,11 @@ package com.authservice.auth.controller;
 import com.authservice.auth.model.UpdateUserRequestDTO;
 import com.authservice.auth.model.User;
 import com.authservice.auth.model.UserResponseDTO;
+import com.authservice.auth.model.AuthResponseDTO;
+import com.authservice.auth.model.ErrorResponseDTO;
 import com.authservice.auth.repository.UserRepository;
+import com.authservice.auth.service.JwtService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +23,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     @GetMapping("/user")
     public ResponseEntity<?> getUserByEmail(@RequestParam("email") String email) {
@@ -82,22 +89,28 @@ public class AuthController {
 
         if (user.getEmail() != null && !user.getEmail().isEmpty()) {
             // registration with email
-            if (userRepository.existsByEmail(user.getEmail())) {
-                return ResponseEntity.badRequest().body("Email already registered - please log in");
+            String email = user.getEmail();
+            if (userRepository.existsByEmail(email)) {
+                return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email already registered - please log in"));
             }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
-            return ResponseEntity.ok("User registered successfully!");
+            String jwt = jwtService.generateToken(email);
+            AuthResponseDTO response = new AuthResponseDTO(jwt, "User registered successfully!");
+            return ResponseEntity.ok(response);
         } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
             // legacy registration with username
-            if (userRepository.existsByUsername(user.getUsername())) {
-                return ResponseEntity.badRequest().body("User already exists - please log in");
+            String username = user.getUsername();
+            if (userRepository.existsByUsername(username)) {
+                return ResponseEntity.badRequest().body(new ErrorResponseDTO("User already exists - please log in"));
             }
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
-            return ResponseEntity.ok("User registered successfully!");
+            String jwt = jwtService.generateToken(username);
+            AuthResponseDTO response = new AuthResponseDTO(jwt, "User registered successfully!");
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.badRequest().body("Username or email must be provided");
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Username or email must be provided"));
         }
     }
 
@@ -106,24 +119,27 @@ public class AuthController {
         // Supports login with either username or email
         // TODO: deprecate username login
 
+        User existingUser = null;
+        String identifier = null;
+
         if (user.getEmail() != null && !user.getEmail().isEmpty()) {
             // login with email
-            User existingUser = userRepository.findByEmail(user.getEmail());
-            if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-                return ResponseEntity.ok("User authenticated");
-            } else {
-                return ResponseEntity.status(401).body("Invalid credentials");
-            }
+            identifier = user.getEmail();
+            existingUser = userRepository.findByEmail(identifier);
         } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
             // legacy login with username
-            User existingUser = userRepository.findByUsername(user.getUsername());
-            if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-                return ResponseEntity.ok("User authenticated");
-            } else {
-                return ResponseEntity.status(401).body("Invalid credentials");
-            }
+            identifier = user.getUsername();
+            existingUser = userRepository.findByUsername(identifier);
         } else {
-            return ResponseEntity.badRequest().body("Username or email must be provided");
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Username or email must be provided"));
+        }
+        
+        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+            String jwt = jwtService.generateToken(identifier);
+            AuthResponseDTO response = new AuthResponseDTO(jwt, "User authenticated");
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(401).body(new ErrorResponseDTO("Email or password is incorrect - please try again"));
         }
     }
 }

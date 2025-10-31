@@ -24,10 +24,10 @@ const analyticsQueryResolvers = {
   /**
    * Get all user statistics
    */
-  allStats: async () => {
+  allStats: async (_, __, context) => {
     try {
       return await retryWithFallback(async () => {
-        return await analyticsService.getAllStats();
+        return await analyticsService.getAllStats(context);
       });
     } catch (error) {
       handleServiceError(error, 'fetch all stats');
@@ -38,10 +38,10 @@ const analyticsQueryResolvers = {
   /**
    * Get statistics for a specific user
    */
-  userStats: async (_, { username }) => {
+  userStats: async (_, { username }, context) => {
     try {
       return await retryWithFallback(async () => {
-        return await analyticsService.getUserStats(username);
+        return await analyticsService.getUserStats(username, context);
       });
     } catch (error) {
       handleServiceError(error, 'fetch user stats');
@@ -52,10 +52,10 @@ const analyticsQueryResolvers = {
   /**
    * Get weekly statistics for a user within date range
    */
-  weeklyStats: async (_, { username, startDate, endDate }) => {
+  weeklyStats: async (_, { username, startDate, endDate }, context) => {
     try {
       return await retryWithFallback(async () => {
-        return await analyticsService.getWeeklyStats(username, startDate, endDate);
+        return await analyticsService.getWeeklyStats(username, startDate, endDate, context);
       });
     } catch (error) {
       handleServiceError(error, 'fetch weekly stats');

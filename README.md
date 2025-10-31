@@ -12,6 +12,19 @@ The Activity Tracking functionality uses the MERN stack (MongoDB, Express.js, Re
 - Each group member should clone the forked version of the repository to their local environment or GitHub Codespace.
 - All project work should be done in your group's fork.
 
+**Important -- Add .env and application.properties files:**
+Files containing environment variables and secret keys are not uploaded to the github repository for security reasons. These files must be added before you can run the app.
+To do so manually:
+- In the **activity-tracking**, **analytics**, **graphql-gateway**, and **ai-speech-parser** directories there is an `.env.example` file.
+- In each directory, copy the contents of the `.env.example` into a new `.env` file.
+- Replace any placeholder values with the real values (such as JWT Secret Key)
+- The real values can be found in the group's shared Google Drive.
+- In `authservice/src/main/resources`, copy the contents of `application.properties.example` into a new `application.properties` file.
+- Again, replace any placeholder values with the real values.
+
+Alternatively, run the script `create-env-files.sh` from the root directory to have the files and a JWT secret key automatically generated for you.
+You will still need to insert the API Key for **ai-speech-parser**.
+
 ### Current Features
 
 - User registration for personalized tracking
@@ -28,6 +41,7 @@ The Activity Tracking functionality uses the MERN stack (MongoDB, Express.js, Re
 - Python Flask
 - Java 8
 (all already installed in the devcontainer)
+- Access to the group's Google Drive for secrets
 
 ## Development in Github Codespaces
 

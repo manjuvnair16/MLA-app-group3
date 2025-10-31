@@ -102,9 +102,13 @@ const Journal = ({ currentUser }) => {
     const fetchExercises = async () => {
       setLoading(true);
       setError(null);
+      const jwt = localStorage.getItem('jwt');
       try {
         const baseUrl = `${API_BASE}/api/activities/range`;
         const res = await axios.get(baseUrl, {
+          headers: {
+            Authorization: jwt ? `Bearer ${jwt}` : undefined
+          },
           params: {
             user: currentUser,
             start: dateRange.start,
@@ -226,10 +230,15 @@ const Journal = ({ currentUser }) => {
         alert('This activity has no id to update');
         return;
       }
+      const jwt = localStorage.getItem('jwt');
       await axios.patch(
         `${API_BASE}/api/activities/${activityId}`,
         { comments: draftComment },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': jwt ? `Bearer ${jwt}` : undefined 
+          } 
+        }
       );
       // update exercises with the new comment
       setExercises((prev) =>

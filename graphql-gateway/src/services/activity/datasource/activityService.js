@@ -7,9 +7,10 @@ export class ActivityService {
     this.baseURL = ACTIVITY_URL;
   }
 
-  async getAllExercises() {
+  async getAllExercises(context) {
     try {
       const response = await axios.get(`${this.baseURL}/exercises`, {
+        headers: { Authorization: context.authHeader },
         timeout: 5000
       });
       
@@ -25,9 +26,10 @@ export class ActivityService {
     }
   }
 
-  async getExerciseById(id) {
+  async getExerciseById(id, context) {
     try {
       const response = await axios.get(`${this.baseURL}/exercises/${id}`, {
+        headers: { Authorization: context.authHeader },
         timeout: 5000
       });
       
@@ -49,29 +51,34 @@ export class ActivityService {
     }
   }
 
-  async addExercise(input) {
+  async addExercise(input, context) {
     await axios.post(`${this.baseURL}/exercises/add`, input, {
+      headers: { Authorization: context.authHeader },
       timeout: 10000
     });
     const all = await axios.get(`${this.baseURL}/exercises`, {
+      headers: { Authorization: context.authHeader },
       timeout: 5000
     });
     const last = all.data[all.data.length - 1];
     return { id: last._id, ...last };
   }
 
-  async updateExercise(id, input) {
+  async updateExercise(id, input, context) {
     await axios.put(`${this.baseURL}/exercises/update/${id}`, input, {
+      headers: { Authorization: context.authHeader },
       timeout: 10000
     });
     const { data } = await axios.get(`${this.baseURL}/exercises/${id}`, {
+      headers: { Authorization: context.authHeader },
       timeout: 5000
     });
     return { id: data._id, ...data };
   }
 
-  async deleteExercise(id) {
+  async deleteExercise(id, context) {
     const { data } = await axios.delete(`${this.baseURL}/exercises/${id}`, {
+      headers: { Authorization: context.authHeader },
       timeout: 10000
     });
     return data.message || "Exercise deleted successfully";
@@ -79,7 +86,7 @@ export class ActivityService {
 
   async healthCheck() {
     try {
-      await axios.get(`${this.baseURL}/exercises`, { timeout: 3000 });
+      await axios.get(`${this.baseURL}/health`, { timeout: 3000 });
       return { status: 'healthy', activityService: 'connected' };
     } catch (error) {
       return { 

@@ -82,6 +82,8 @@ services:
       - ACTIVITY_URL=http://activity-tracking:5300
       - ANALYTICS_URL=http://analytics:5050
       - CORS_ORIGINS=http://localhost:3000
+    env_file:
+      - ./graphql-gateway/.env
     ports:
       - "4000:4000"
     depends_on:
