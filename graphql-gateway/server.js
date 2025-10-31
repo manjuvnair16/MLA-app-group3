@@ -3,6 +3,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
+import helmet from "helmet";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import depthLimit from "graphql-depth-limit";
@@ -203,6 +204,48 @@ const setupGracefulShutdown = (server) => {
 async function start() {
   try {
     const app = express();
+    
+    // Security headers middleware
+    app.use(helmet({
+      // Prevent content type sniffing
+      noSniff: true,
+      // Disable frame embedding (X-Frame-Options: DENY)
+      frameguard: {
+        action: 'deny'
+      },
+      // Content Security Policy - provides XSS protection
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+      // Hide powered-by header
+      hidePoweredBy: true,
+      // HTTP Strict Transport Security
+      hsts: {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true
+      },
+      // Legacy XSS protection header for older browsers (CSP is the modern approach)
+      crossOriginEmbedderPolicy: false, // Can be enabled if needed, but may break some integrations
+      crossOriginOpenerPolicy: false, // Can be enabled if needed
+      crossOriginResourcePolicy: { policy: "cross-origin" } // Allows cross-origin requests
+    }));
+    
+    // Add legacy X-XSS-Protection header for older browsers
+    // (Modern browsers use CSP which is configured above)
+    app.use((req, res, next) => {
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+      next();
+    });
     
     // HTTP request metrics middleware
     app.use((req, res, next) => {
