@@ -7,10 +7,11 @@ import javax.validation.constraints.Size;
 public class LoginRequestDTO {
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
-    @Size(max = 254)
+    @Size(max = 254, message = "Email address too long")
     private String email;
 
     @NotBlank(message = "Password is required")
+    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
     private String password;
 
     public String getEmail() {
