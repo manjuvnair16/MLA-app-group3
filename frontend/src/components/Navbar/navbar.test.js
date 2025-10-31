@@ -2,13 +2,13 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import NavbarComponent from "./navbar.js";
 
-const mockedNavigate = jest.fn();
-const mockedUseLocation = jest.fn();
+const mockNavigate = jest.fn();
+const mockUseLocation = jest.fn();
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: () => mockedNavigate,
-  useLocation: () => mockedUseLocation(),
+  useNavigate: () => mockNavigate,
+  useLocation: () => mockUseLocation(),
 }));
 
 beforeEach(() => {
@@ -17,7 +17,7 @@ beforeEach(() => {
 
 describe("NavbarComponent - Settings Tab", () => {
   it("renders Settings tab", () => {
-    mockedUseLocation.mockReturnValue({ pathname: "/" });
+    mockUseLocation.mockReturnValue({ pathname: "/" });
 
     render(
       <MemoryRouter>
@@ -29,7 +29,7 @@ describe("NavbarComponent - Settings Tab", () => {
   });
 
   it("navigates to /settings when Settings tab is clicked", () => {
-    mockedUseLocation.mockReturnValue({ pathname: "/" });
+    mockUseLocation.mockReturnValue({ pathname: "/" });
 
     render(
       <MemoryRouter>
@@ -40,11 +40,11 @@ describe("NavbarComponent - Settings Tab", () => {
     const settingsLink = screen.getByText(/Settings/i);
     fireEvent.click(settingsLink);
 
-    expect(mockedNavigate).toHaveBeenCalledWith("/settings");
+    expect(mockNavigate).toHaveBeenCalledWith("/settings");
   });
 
   it("applies active class when on /settings route", () => {
-    mockedUseLocation.mockReturnValue({ pathname: "/settings" });
+    mockUseLocation.mockReturnValue({ pathname: "/settings" });
 
     render(
       <MemoryRouter>
