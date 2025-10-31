@@ -1,0 +1,118 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import axios from "axios";
+import { MemoryRouter } from "react-router-dom";
+import Settings from "./settings.js";
+
+jest.mock("axios");
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: () => mockNavigate,
+}));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  localStorage.clear();
+});
+describe("Settings Component", () => {
+  it("fetches and displays user data", async () => {
+    axios.get.mockResolvedValueOnce({
+      data: {
+        id: "1",
+        email: "test@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      },
+    });
+
+    render(<Settings userEmail="test@example.com" />, {
+      wrapper: MemoryRouter,
+    });
+
+    expect(await screen.findByDisplayValue("Jane")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Doe")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("test@example.com")).toBeInTheDocument();
+  });
+
+  it("toggles edit mode when clicking edit button", async () => {
+    axios.get.mockResolvedValueOnce({
+      data: {
+        id: "1",
+        email: "test@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      },
+    });
+
+    render(<Settings userEmail="test@example.com" />, {
+      wrapper: MemoryRouter,
+    });
+
+    const editBtn = await screen.findByRole("button", { name: /edit/i });
+    fireEvent.click(editBtn);
+
+    expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
+  });
+
+  it("saves updated first/last name", async () => {
+    axios.get.mockResolvedValueOnce({
+      data: {
+        id: "1",
+        email: "test@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      },
+    });
+    axios.patch.mockResolvedValueOnce({
+      data: "User details updated successfully",
+    });
+
+    render(<Settings userEmail="test@example.com" />, {
+      wrapper: MemoryRouter,
+    });
+
+    await screen.findByDisplayValue("Jane");
+
+    fireEvent.click(screen.getByText(/edit/i));
+
+    const firstNameInput = screen.getByLabelText(/FirstName/i);
+    fireEvent.change(firstNameInput, { target: { value: "Janet" } });
+
+    fireEvent.click(screen.getByText(/save/i));
+
+    await waitFor(() =>
+      expect(axios.patch).toHaveBeenCalledWith(
+        "http://localhost:8080/api/auth/user/1",
+        expect.objectContaining({ firstName: "Janet", lastName: "Doe" })
+      )
+    );
+
+    expect(
+      await screen.findByText(/Profile updated successfully/i)
+    ).toBeInTheDocument();
+  });
+
+  it("handles API error gracefully", async () => {
+    axios.get.mockResolvedValueOnce({
+      data: {
+        id: "1",
+        email: "test@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      },
+    });
+    axios.patch.mockRejectedValueOnce({
+      response: { data: "An error occurred while saving changes" },
+    });
+
+    render(<Settings userEmail="test@example.com" />, {
+      wrapper: MemoryRouter,
+    });
+
+    await screen.findByDisplayValue("Jane");
+    fireEvent.click(screen.getByText(/edit/i));
+    fireEvent.click(screen.getByText(/save/i));
+
+    expect(await screen.findByText(/An error occurred/i)).toBeInTheDocument();
+  });
+});
