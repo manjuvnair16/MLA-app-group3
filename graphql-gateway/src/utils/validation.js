@@ -54,9 +54,9 @@ export function validateID(id) {
 }
 
 /**
- * Validate username format
+ * Validate username format (must be a valid email address)
  * @param {string} username - The username to validate
- * @returns {string} - Validated username
+ * @returns {string} - Validated username (email address)
  * @throws {ValidationError} - If username is invalid
  */
 export function validateUsername(username) {
@@ -64,22 +64,94 @@ export function validateUsername(username) {
     throw new ValidationError('Username is required and must be a string', 'username', 'INVALID_USERNAME');
   }
 
-  const trimmed = username.trim();
+  const trimmed = username.trim().toLowerCase();
 
   // Validate format FIRST to reject malicious input before sanitization
-  // Username should be 3-50 characters, alphanumeric with underscores and hyphens
-  if (trimmed.length < 3 || trimmed.length > 50) {
+  // Username must be a valid email address (RFC 5321 allows up to 254 characters total)
+  if (trimmed.length < 5 || trimmed.length > 254) {
     throw new ValidationError(
-      'Username must be between 3 and 50 characters',
+      'Username must be a valid email address between 5 and 254 characters',
       'username',
       'INVALID_USERNAME_LENGTH'
     );
   }
 
+  // Email validation regex (RFC 5322 compliant pattern)
+  // Matches: local-part@domain
+  // Local part: alphanumeric, dots, hyphens, underscores, plus signs
+  // Domain: alphanumeric, dots, hyphens
+  const emailPattern = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  
   // Check format before sanitization to reject malicious input
-  if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+  if (!emailPattern.test(trimmed)) {
     throw new ValidationError(
-      'Username must contain only alphanumeric characters, underscores, and hyphens',
+      'Username must be a valid email address',
+      'username',
+      'INVALID_USERNAME_FORMAT'
+    );
+  }
+
+  // Additional validation: ensure local part is not empty and domain has valid TLD
+  const parts = trimmed.split('@');
+  if (parts.length !== 2) {
+    throw new ValidationError(
+      'Username must be a valid email address',
+      'username',
+      'INVALID_USERNAME_FORMAT'
+    );
+  }
+
+  const [localPart, domain] = parts;
+  
+  // Validate local part (before @)
+  if (localPart.length < 1 || localPart.length > 64) {
+    throw new ValidationError(
+      'Email local part must be between 1 and 64 characters',
+      'username',
+      'INVALID_USERNAME_FORMAT'
+    );
+  }
+
+  // Local part cannot start or end with dot
+  if (localPart.startsWith('.') || localPart.endsWith('.')) {
+    throw new ValidationError(
+      'Email local part cannot start or end with a dot',
+      'username',
+      'INVALID_USERNAME_FORMAT'
+    );
+  }
+
+  // Local part cannot have consecutive dots
+  if (localPart.includes('..')) {
+    throw new ValidationError(
+      'Email local part cannot contain consecutive dots',
+      'username',
+      'INVALID_USERNAME_FORMAT'
+    );
+  }
+
+  // Validate domain (after @)
+  if (domain.length < 4 || domain.length > 255) {
+    throw new ValidationError(
+      'Email domain must be between 4 and 255 characters',
+      'username',
+      'INVALID_USERNAME_FORMAT'
+    );
+  }
+
+  // Domain must have at least one dot and valid TLD
+  if (!domain.includes('.') || domain.startsWith('.') || domain.endsWith('.')) {
+    throw new ValidationError(
+      'Email domain must be valid',
+      'username',
+      'INVALID_USERNAME_FORMAT'
+    );
+  }
+
+  // Domain cannot have consecutive dots
+  if (domain.includes('..')) {
+    throw new ValidationError(
+      'Email domain cannot contain consecutive dots',
       'username',
       'INVALID_USERNAME_FORMAT'
     );
@@ -89,19 +161,20 @@ export function validateUsername(username) {
   const sanitized = sanitizeString(trimmed, { 
     preventSQLInjection: true, 
     preventXSS: true,
-    maxLength: 50 
+    maxLength: 254 
   });
 
   // Double-check after sanitization
-  if (sanitized.length < 3 || sanitized.length > 50) {
+  if (sanitized.length < 5 || sanitized.length > 254) {
     throw new ValidationError(
-      'Username must be between 3 and 50 characters after sanitization',
+      'Username must be a valid email address between 5 and 254 characters after sanitization',
       'username',
       'INVALID_USERNAME_LENGTH'
     );
   }
 
-  if (!/^[a-zA-Z0-9_-]+$/.test(sanitized)) {
+  // Re-validate email format after sanitization
+  if (!emailPattern.test(sanitized)) {
     throw new ValidationError(
       'Username contains invalid characters after sanitization',
       'username',
@@ -345,22 +418,10 @@ export function validateAddExerciseInput(input) {
   }
 
   const sanitized = sanitizeGraphQLInput(input, {
-    username: { preventSQLInjection: true, preventXSS: true, maxLength: 50 },
+    username: { preventSQLInjection: true, preventXSS: true, maxLength: 254 },
     exerciseType: { preventSQLInjection: true, preventXSS: true, maxLength: 100 },
     description: { preventSQLInjection: true, preventXSS: true, removeHTML: true, maxLength: 1000 }
   });
-
-  // After sanitization, clean up the username to ensure it's valid
-  // Replace spaces and invalid characters with underscores
-  if (sanitized.username && typeof sanitized.username === 'string') {
-    sanitized.username = sanitized.username
-      .replace(/[^a-zA-Z0-9_-]/g, '_')  // Replace invalid chars with underscore
-      .replace(/_{2,}/g, '_')            // Replace multiple underscores with single
-      .replace(/^_+|_+$/g, '')           // Remove leading/trailing underscores
-      .trim();
-    
-    // If normalization resulted in empty or too short username, it will be caught by validateUsername
-  }
 
   return {
     username: validateUsername(sanitized.username),
@@ -383,7 +444,7 @@ export function validateUpdateExerciseInput(input) {
   }
 
   const sanitized = sanitizeGraphQLInput(input, {
-    username: { preventSQLInjection: true, preventXSS: true, maxLength: 50 },
+    username: { preventSQLInjection: true, preventXSS: true, maxLength: 254 },
     exerciseType: { preventSQLInjection: true, preventXSS: true, maxLength: 100 },
     description: { preventSQLInjection: true, preventXSS: true, removeHTML: true, maxLength: 1000 }
   });

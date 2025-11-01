@@ -61,26 +61,47 @@ describe('Input Validation Tests', () => {
   });
 
   describe('validateUsername', () => {
-    it('should validate a valid username', () => {
-      const validUsernames = ['user123', 'test_user', 'user-name', 'abc', 'a'.repeat(50)];
+    it('should validate a valid email address username', () => {
+      const validUsernames = [
+        'user@example.com',
+        'test.user@example.com',
+        'user+tag@example.co.uk',
+        'user_name@example-domain.com',
+        'user123@test.example.com',
+        'a@b.co', // minimum valid email
+        'longusername' + '@' + 'a'.repeat(50) + '.com' // long but valid (under 254 chars)
+      ];
       validUsernames.forEach(username => {
         const result = validateUsername(username);
-        assert.ok(result.length >= 3 && result.length <= 50);
+        assert.ok(result.includes('@'), `Should contain @: ${result}`);
+        assert.ok(result.length >= 5 && result.length <= 254, `Should be valid length: ${result.length}`);
+        assert.ok(result.toLowerCase() === result, `Should be lowercase: ${result}`);
       });
     });
 
-    it('should reject invalid usernames', () => {
+    it('should reject invalid email addresses', () => {
       const invalidUsernames = [
         null,
         undefined,
         '',
         'ab', // too short
         'a', // too short
-        'a'.repeat(51), // too long
-        'user name', // spaces
-        'user@name', // special characters
-        'user<script>alert(1)</script>', // XSS attempt
-        'user\' OR \'1\'=\'1', // SQL injection
+        'notanemail', // no @
+        '@example.com', // missing local part
+        'user@', // missing domain
+        'user@example', // missing TLD
+        'user..name@example.com', // consecutive dots in local part
+        '.user@example.com', // starts with dot
+        'user.@example.com', // ends with dot
+        'user@.example.com', // domain starts with dot
+        'user@example..com', // consecutive dots in domain
+        'user name@example.com', // spaces
+        'user<script>@example.com', // XSS attempt
+        'user\' OR \'1\'=\'1@example.com', // SQL injection
+        'a'.repeat(65) + '@example.com', // local part too long
+        'user@' + 'a'.repeat(256) + '.com', // domain too long
+        'a@b.c', // TLD too short
+        'user@com', // no dot in domain
       ];
 
       invalidUsernames.forEach(username => {
@@ -92,9 +113,28 @@ describe('Input Validation Tests', () => {
       });
     });
 
-    it('should trim whitespace from usernames', () => {
-      const result = validateUsername('  user123  ');
-      assert.strictEqual(result, 'user123');
+    it('should trim whitespace and convert to lowercase', () => {
+      const result = validateUsername('  USER@EXAMPLE.COM  ');
+      assert.strictEqual(result, 'user@example.com');
+    });
+
+    it('should handle valid email edge cases', () => {
+      // Valid emails with various formats
+      const validEmails = [
+        'user+tag@example.com',
+        'user.name@example.com',
+        'user_name@example.com',
+        'user-name@example.com',
+        'user123@example123.com',
+        'a@b.co.uk',
+        'test@subdomain.example.com'
+      ];
+      
+      validEmails.forEach(email => {
+        const result = validateUsername(email);
+        assert.ok(result.includes('@'), `Should contain @: ${result}`);
+        assert.strictEqual(result, result.toLowerCase(), `Should be lowercase: ${result}`);
+      });
     });
   });
 
@@ -265,14 +305,14 @@ describe('Input Validation Tests', () => {
   describe('validateAddExerciseInput', () => {
     it('should validate a valid exercise input', () => {
       const validInput = {
-        username: 'testuser',
+        username: 'testuser@example.com',
         exerciseType: 'Running',
         description: 'Morning run',
         duration: 30,
         date: '2024-01-01'
       };
       const result = validateAddExerciseInput(validInput);
-      assert.strictEqual(result.username, 'testuser');
+      assert.strictEqual(result.username, 'testuser@example.com');
       assert.strictEqual(result.exerciseType, 'Running');
       assert.strictEqual(result.description, 'Morning run');
       assert.strictEqual(result.duration, 30);
@@ -285,7 +325,7 @@ describe('Input Validation Tests', () => {
         undefined,
         {},
         { username: 'testuser' }, // missing required fields
-        { username: 'ab', exerciseType: 'Running', duration: 30, date: '2024-01-01' }, // invalid username
+        { username: 'notanemail', exerciseType: 'Running', duration: 30, date: '2024-01-01' }, // invalid username (not email)
         { username: 'testuser', exerciseType: '', duration: 30, date: '2024-01-01' }, // invalid exercise type
         { username: 'testuser', exerciseType: 'Running', duration: -1, date: '2024-01-01' }, // invalid duration
         { username: 'testuser', exerciseType: 'Running', duration: 30, date: 'invalid' } // invalid date
@@ -300,7 +340,7 @@ describe('Input Validation Tests', () => {
       });
     });
 
-    it('should sanitize malicious input', () => {
+    it('should reject malicious input', () => {
       const maliciousInput = {
         username: "admin'; DROP TABLE users; --",
         exerciseType: 'Running',
@@ -309,32 +349,33 @@ describe('Input Validation Tests', () => {
         date: '2024-01-01'
       };
       
-      const result = validateAddExerciseInput(maliciousInput);
-      // Username should be sanitized and rejected or sanitized
-      assert.ok(!result.username.includes('DROP'));
-      // Description should be sanitized
-      assert.ok(!result.description.includes('<script>'));
+      // Username with SQL injection should be rejected (not a valid email)
+      assert.throws(
+        () => validateAddExerciseInput(maliciousInput),
+        ValidationError,
+        'Should reject malicious username'
+      );
     });
   });
 
   describe('validateUpdateExerciseInput', () => {
     it('should validate a valid update input', () => {
       const validInput = {
-        username: 'testuser',
+        username: 'testuser@example.com',
         exerciseType: 'Swimming',
         description: 'Pool session',
         duration: 45,
         date: '2024-01-02'
       };
       const result = validateUpdateExerciseInput(validInput);
-      assert.strictEqual(result.username, 'testuser');
+      assert.strictEqual(result.username, 'testuser@example.com');
       assert.strictEqual(result.exerciseType, 'Swimming');
       assert.strictEqual(result.duration, 45);
     });
 
     it('should reject invalid update inputs', () => {
       const invalidInput = {
-        username: 'ab',
+        username: 'notanemail',
         exerciseType: 'Running',
         duration: 30,
         date: '2024-01-01'
@@ -447,6 +488,7 @@ describe('Malformed Input Attack Tests', () => {
 
     sqlInjectionAttempts.forEach((malicious, index) => {
       it(`should reject SQL injection attempt ${index + 1}`, () => {
+        // SQL injection attempts are not valid email addresses
         assert.throws(
           () => validateUsername(malicious),
           ValidationError,
@@ -480,7 +522,7 @@ describe('Malformed Input Attack Tests', () => {
 
   describe('Buffer Overflow / Length Attacks', () => {
     it('should reject extremely long inputs', () => {
-      const longString = 'a'.repeat(10000);
+      const longString = 'a'.repeat(10000) + '@example.com';
       assert.throws(
         () => validateUsername(longString),
         ValidationError,
@@ -537,7 +579,7 @@ describe('Malformed Input Attack Tests', () => {
 
   describe('Special Character Attacks', () => {
     it('should handle null bytes', () => {
-      const withNull = 'user\0name';
+      const withNull = 'user\0name@example.com';
       assert.throws(
         () => validateUsername(withNull),
         ValidationError,
@@ -546,7 +588,7 @@ describe('Malformed Input Attack Tests', () => {
     });
 
     it('should handle control characters', () => {
-      const withControl = 'user\x00name';
+      const withControl = 'user\x00name@example.com';
       assert.throws(
         () => validateUsername(withControl),
         ValidationError,

@@ -33,9 +33,9 @@ describe('Analytics Resolvers Tests', () => {
     describe('userStats', () => {
       it('should validate username', async () => {
         await assert.rejects(
-          () => analyticsResolvers.AnalyticsQuery.userStats(null, { username: 'ab' }, {}),
+          () => analyticsResolvers.AnalyticsQuery.userStats(null, { username: 'notanemail' }, {}),
           ValidationError,
-          'Should validate username length'
+          'Should validate username format (must be email)'
         );
       });
 
@@ -43,13 +43,13 @@ describe('Analytics Resolvers Tests', () => {
         await assert.rejects(
           () => analyticsResolvers.AnalyticsQuery.userStats(null, { username: 'user name' }, {}),
           ValidationError,
-          'Should reject usernames with spaces'
+          'Should reject invalid email addresses'
         );
       });
 
       it('should return array (may be empty on error)', async () => {
         try {
-          const result = await analyticsResolvers.AnalyticsQuery.userStats(null, { username: 'testuser123' }, {});
+          const result = await analyticsResolvers.AnalyticsQuery.userStats(null, { username: 'testuser@example.com' }, {});
           assert.ok(Array.isArray(result), 'Should return an array');
         } catch (error) {
           // May throw validation or service error
@@ -63,11 +63,11 @@ describe('Analytics Resolvers Tests', () => {
         await assert.rejects(
           () => analyticsResolvers.AnalyticsQuery.weeklyStats(
             null,
-            { username: 'ab', startDate: '2024-01-01', endDate: '2024-01-31' },
+            { username: 'notanemail', startDate: '2024-01-01', endDate: '2024-01-31' },
             {}
           ),
           ValidationError,
-          'Should validate username'
+          'Should validate username (must be email)'
         );
       });
 
@@ -75,7 +75,7 @@ describe('Analytics Resolvers Tests', () => {
         await assert.rejects(
           () => analyticsResolvers.AnalyticsQuery.weeklyStats(
             null,
-            { username: 'testuser', startDate: '2024-01-31', endDate: '2024-01-01' },
+            { username: 'testuser@example.com', startDate: '2024-01-31', endDate: '2024-01-01' },
             {}
           ),
           ValidationError,
@@ -87,7 +87,7 @@ describe('Analytics Resolvers Tests', () => {
         await assert.rejects(
           () => analyticsResolvers.AnalyticsQuery.weeklyStats(
             null,
-            { username: 'testuser', startDate: '2024-01-01', endDate: '2025-02-01' },
+            { username: 'testuser@example.com', startDate: '2024-01-01', endDate: '2025-02-01' },
             {}
           ),
           ValidationError,
@@ -99,7 +99,7 @@ describe('Analytics Resolvers Tests', () => {
         try {
           const result = await analyticsResolvers.AnalyticsQuery.weeklyStats(
             null,
-            { username: 'testuser', startDate: '2024-01-01', endDate: '2024-01-31' },
+            { username: 'testuser@example.com', startDate: '2024-01-01', endDate: '2024-01-31' },
             {}
           );
           assert.ok(Array.isArray(result), 'Should return an array');

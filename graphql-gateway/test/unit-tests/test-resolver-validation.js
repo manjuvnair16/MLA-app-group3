@@ -11,15 +11,15 @@ describe('Resolver Validation Tests', () => {
   describe('validateResolverInput', () => {
     it('should return validated input when validation succeeds', () => {
       const validator = validateUsername;
-      const input = 'testuser123';
+      const input = 'testuser@example.com';
       const result = validateResolverInput(validator, input, 'username');
       
-      assert.strictEqual(result, 'testuser123');
+      assert.strictEqual(result, 'testuser@example.com');
     });
 
     it('should re-throw ValidationError as-is', () => {
       const validator = validateUsername;
-      const invalidInput = 'ab'; // Too short
+      const invalidInput = 'notanemail'; // Invalid email format
       
       assert.throws(
         () => validateResolverInput(validator, invalidInput, 'username'),
@@ -66,13 +66,13 @@ describe('Resolver Validation Tests', () => {
       
       const validatedResolver = createValidatedResolver(resolver, validationRules);
       const parent = null;
-      const args = { username: 'testuser', id: 'test123', extra: 'field' };
+      const args = { username: 'testuser@example.com', id: 'test123', extra: 'field' };
       const context = {};
       const info = {};
       
       const result = await validatedResolver(parent, args, context, info);
       
-      assert.strictEqual(result.username, 'testuser');
+      assert.strictEqual(result.username, 'testuser@example.com');
       assert.strictEqual(result.id, 'test123');
     });
 
@@ -86,11 +86,11 @@ describe('Resolver Validation Tests', () => {
       };
       
       const validatedResolver = createValidatedResolver(resolver, validationRules);
-      const args = { username: 'testuser', unvalidated: 'some value' };
+      const args = { username: 'testuser@example.com', unvalidated: 'some value' };
       
       const result = await validatedResolver(null, args, {}, {});
       
-      assert.strictEqual(result.username, 'testuser');
+      assert.strictEqual(result.username, 'testuser@example.com');
       assert.strictEqual(result.unvalidated, 'some value');
     });
 
@@ -104,11 +104,11 @@ describe('Resolver Validation Tests', () => {
       };
       
       const validatedResolver = createValidatedResolver(resolver, validationRules);
-      const args = { username: 'testuser', otherField: 'value' };
+      const args = { username: 'testuser@example.com', otherField: 'value' };
       
       const result = await validatedResolver(null, args, {}, {});
       
-      assert.strictEqual(result.username, 'testuser');
+      assert.strictEqual(result.username, 'testuser@example.com');
       assert.strictEqual(result.otherField, 'value');
     });
 
@@ -122,7 +122,7 @@ describe('Resolver Validation Tests', () => {
       };
       
       const validatedResolver = createValidatedResolver(resolver, validationRules);
-      const args = { username: 'ab' }; // Invalid (too short)
+      const args = { username: 'notanemail' }; // Invalid (not an email)
       
       await assert.rejects(
         () => validatedResolver(null, args, {}, {}),
@@ -172,11 +172,11 @@ describe('Resolver Validation Tests', () => {
       };
       
       const validatedResolver = createValidatedResolver(resolver, validationRules);
-      const args = { username: 'testuser' }; // id is undefined
+      const args = { username: 'testuser@example.com' }; // id is undefined
       
       const result = await validatedResolver(null, args, {}, {});
       
-      assert.strictEqual(result.username, 'testuser');
+      assert.strictEqual(result.username, 'testuser@example.com');
     });
 
     it('should work with empty validationRules', async () => {
