@@ -1,5 +1,6 @@
 import { createComplexityRule, simpleEstimator } from 'graphql-query-complexity';
 import { validate } from 'graphql';
+import { logger } from '../utils/logger.js';
 
 /**
  * Create Apollo Server plugin for query complexity limiting
@@ -40,7 +41,12 @@ export function createComplexityPlugin(maxComplexity = 1500) {
                 
                 // Log complexity for monitoring and debugging
                 const opName = operationName || 'anonymous';
-                console.log(`[Query Complexity] Operation: ${opName}, Cost: ${complexity} points (limit: ${maxComplexity})`);
+                logger.debug({
+                  type: 'query_complexity',
+                  operationName: opName,
+                  complexity,
+                  maxComplexity,
+                }, `Query complexity: ${opName}, Cost: ${complexity} points (limit: ${maxComplexity})`);
               }
             });
 

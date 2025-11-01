@@ -1,7 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { createComplexityPlugin } from '../src/middleware/complexityPlugin.js';
+import { createComplexityPlugin } from '../../src/middleware/complexityPlugin.js';
 import { buildSchema, parse } from 'graphql';
+import { logger } from '../../src/utils/logger.js';
 
 describe('Query Complexity Tests', () => {
   // Create a simple test schema
@@ -91,8 +92,8 @@ describe('Query Complexity Tests', () => {
       await hooks.didResolveOperation(requestContext);
       
       // If we get here, the query wasn't rejected - debug why
-      console.log(`DEBUG: Complexity calculated: ${requestContext.request.complexity}`);
-      console.log(`DEBUG: Limit was: 10`);
+      logger.debug({ type: 'test', complexity: requestContext.request.complexity }, `DEBUG: Complexity calculated: ${requestContext.request.complexity}`);
+      logger.debug({ type: 'test', limit: 10 }, `DEBUG: Limit was: 10`);
       
       // Force fail if no error was thrown
       assert.fail('Expected query to be rejected due to complexity, but it was allowed');

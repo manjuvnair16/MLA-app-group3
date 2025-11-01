@@ -11,12 +11,12 @@ import {
   validateAddExerciseInput,
   validateUpdateExerciseInput,
   ValidationError
-} from '../src/utils/validation.js';
+} from '../../src/utils/validation.js';
 import {
   sanitizeString,
   sanitizeObject,
   sanitizeGraphQLInput
-} from '../src/utils/sanitization.js';
+} from '../../src/utils/sanitization.js';
 
 describe('Input Validation Tests', () => {
   describe('validateID', () => {

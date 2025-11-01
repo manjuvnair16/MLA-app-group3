@@ -114,6 +114,23 @@ export function sanitizeGraphQLInput(input, fieldRules = {}) {
     return input;
   }
 
+  // Handle arrays
+  if (Array.isArray(input)) {
+    return input.map(item => {
+      if (typeof item === 'string') {
+        return sanitizeString(item, {
+          preventSQLInjection: fieldRules.preventSQLInjection !== false,
+          preventXSS: fieldRules.preventXSS !== false,
+          removeHTML: fieldRules.removeHTML || false,
+          maxLength: fieldRules.maxLength
+        });
+      } else if (typeof item === 'object' && item !== null) {
+        return sanitizeGraphQLInput(item, fieldRules);
+      }
+      return item;
+    });
+  }
+
   const sanitized = {};
 
   for (const [key, value] of Object.entries(input)) {
@@ -125,6 +142,21 @@ export function sanitizeGraphQLInput(input, fieldRules = {}) {
         preventXSS: fieldRule.preventXSS !== false,
         removeHTML: fieldRule.removeHTML || false,
         maxLength: fieldRule.maxLength
+      });
+    } else if (Array.isArray(value)) {
+      // Handle array values with field-specific rules
+      sanitized[key] = value.map(item => {
+        if (typeof item === 'string') {
+          return sanitizeString(item, {
+            preventSQLInjection: fieldRule.preventSQLInjection !== false,
+            preventXSS: fieldRule.preventXSS !== false,
+            removeHTML: fieldRule.removeHTML || false,
+            maxLength: fieldRule.maxLength
+          });
+        } else if (typeof item === 'object' && item !== null) {
+          return sanitizeGraphQLInput(item, fieldRules);
+        }
+        return item;
       });
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeGraphQLInput(value, fieldRules);

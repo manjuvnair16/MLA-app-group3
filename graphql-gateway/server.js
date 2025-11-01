@@ -12,7 +12,9 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
 import { Registry, Counter, Histogram, collectDefaultMetrics } from "prom-client";
 import { createComplexityPlugin } from './src/middleware/complexityPlugin.js';
+import { createLoggingPlugin } from './src/middleware/loggingPlugin.js';
 import { ValidationError } from './src/utils/validation.js';
+import { logger, logServerStart, logServerShutdown } from './src/utils/logger.js';
 
 // Import service components
 import { activityTypeDefs } from './src/services/activity/schema/index.js';
@@ -25,7 +27,10 @@ import { config } from './src/config/index.js';
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 // Log presence of JWT secret for debugging (NOT the value itself)
-console.log('JWT_SECRET_KEY present:', !!JWT_SECRET_KEY);
+logger.info({ 
+  type: 'config',
+  jwtSecretConfigured: !!JWT_SECRET_KEY 
+}, 'JWT configuration check');
 
 /**
  * Helper function to verify JWT
@@ -165,7 +170,13 @@ const handleHealthCheck = async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error({
+      type: 'health_check_error',
+      error: {
+        message: error.message,
+        name: error.name,
+      }
+    }, 'Health check error');
     res.status(503).json({
       status: 'unhealthy',
       error: 'Health check failed',
@@ -178,7 +189,8 @@ const handleHealthCheck = async (req, res) => {
  * GraphQL Error Formatter
  */
 const formatGraphQLError = (error) => {
-  console.error('GraphQL Error:', error);
+  // Error logging is handled by the logging plugin
+  // This formatter only formats the error for the client response
   
   // Handle ValidationError instances directly
   if (error.originalError instanceof ValidationError) {
@@ -206,9 +218,9 @@ const formatGraphQLError = (error) => {
  */
 const setupGracefulShutdown = (server) => {
   process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
+    logger.info({ type: 'shutdown_signal', signal: 'SIGTERM' }, 'SIGTERM received, shutting down gracefully');
     server.stop().then(() => {
-      console.log('GraphQL server stopped');
+      logServerShutdown();
       process.exit(0);
     });
   });
@@ -294,6 +306,11 @@ async function start() {
           includeCookies: false
         }),
         createComplexityPlugin(1500), // Add complexity limiting with max 1500 points
+        createLoggingPlugin({
+          logQueries: true,
+          logVariables: true,
+          slowQueryThreshold: 1000, // 1 second
+        }),
         {
           requestDidStart(requestContext) {
             const startTime = Date.now();
@@ -341,7 +358,13 @@ async function start() {
               jwtPayload = verifyJWT(authHeader);
             } catch (err) {
               // Log warning but do not throw to allow playground/introspection
-              console.warn('JWT verification failed:', err.message);
+              logger.warn({
+                type: 'jwt_verification_failed',
+                error: {
+                  message: err.message,
+                  name: err.name,
+                }
+              }, 'JWT verification failed');
             }
           }
 
@@ -355,25 +378,42 @@ async function start() {
     
     // Start server
     app.listen(config.port, () => {
-      console.log(`🚀 GraphQL Gateway running at http://localhost:${config.port}/graphql`);
-      console.log(`📊 Health check available at http://localhost:${config.port}/health`);
-      console.log(`📈 Metrics endpoint available at http://localhost:${config.port}/metrics`);
-      console.log(`🔗 Activity Service: ${config.activityUrl}`);
-      console.log(`📈 Analytics Service: ${config.analyticsUrl}`);
-      console.log(`Environment: ${config.nodeEnv}`);
+      logServerStart({
+        port: config.port,
+        graphqlEndpoint: `http://localhost:${config.port}/graphql`,
+        healthEndpoint: `http://localhost:${config.port}/health`,
+        metricsEndpoint: `http://localhost:${config.port}/metrics`,
+        activityService: config.activityUrl,
+        analyticsService: config.analyticsUrl,
+        environment: config.nodeEnv,
+      });
     });
 
     // Setup graceful shutdown
     setupGracefulShutdown(server);
 
   } catch (error) {
-    console.error('Failed to start GraphQL Gateway:', error);
+    logger.fatal({
+      type: 'server_startup_error',
+      error: {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      }
+    }, 'Failed to start GraphQL Gateway');
     process.exit(1);
   }
 }
 
 // Start the server
 start().catch(error => {
-  console.error('Startup error:', error);
+  logger.fatal({
+    type: 'startup_error',
+    error: {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    }
+  }, 'Startup error');
   process.exit(1);
 });
