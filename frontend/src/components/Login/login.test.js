@@ -28,7 +28,16 @@ it("renders login form", () => {
 });
 
 it("calls onLogin on successful login", async () => {
-  axios.post.mockResolvedValue({ status: 200 });
+  axios.post.mockResolvedValue({ status: 200, data: { jwt: "test-jwt" } });
+  axios.get.mockResolvedValue({
+    data: {
+      id: "1",
+      email: "test@test.com",
+      firstName: "John",
+      lastName: "Doe",
+    },
+  });
+
   fireEvent.change(screen.getByLabelText(/Email/i), {
     target: { value: "test@test.com" },
   });
@@ -42,7 +51,10 @@ it("calls onLogin on successful login", async () => {
 
 it("shows error message on incorrect password", async () => {
   axios.post.mockRejectedValue({
-    response: { status: 401, data: "Invalid credentials" },
+    response: {
+      status: 401,
+      data: { message: "Email or password is incorrect - please try again" },
+    },
   });
   fireEvent.change(screen.getByLabelText(/Email/i), {
     target: { value: "test@test.com" },
@@ -54,13 +66,21 @@ it("shows error message on incorrect password", async () => {
 
   await waitFor(() =>
     expect(
-      screen.getByText(/Username or password is incorrect/i)
+      screen.getByText(/Email or password is incorrect - please try again/i)
     ).toBeInTheDocument()
   );
 });
 
 it("navigates to statistics page on successful login", async () => {
-  axios.post.mockResolvedValue({ status: 200 });
+  axios.post.mockResolvedValue({ status: 200, data: { jwt: "test-jwt" } });
+  axios.get.mockResolvedValue({
+    data: {
+      id: "1",
+      email: "test@test.com",
+      firstName: "John",
+      lastName: "Doe",
+    },
+  });
   fireEvent.change(screen.getByLabelText(/Email/i), {
     target: { value: "test@test.com" },
   });

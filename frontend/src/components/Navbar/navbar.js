@@ -10,6 +10,7 @@ const NavbarComponent = ({ onLogout }) => {
   const location = useLocation(); // MN_scrum_13 - active tab colour
 
   const onNavigate = (route) => {
+    console.log("Navigating to:", route);
     switch (route) {
       case "TrackExercise":
         navigate("/trackExercise");

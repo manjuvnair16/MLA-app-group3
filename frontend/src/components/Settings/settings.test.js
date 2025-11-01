@@ -115,4 +115,29 @@ describe("Settings Component", () => {
 
     expect(await screen.findByText(/An error occurred/i)).toBeInTheDocument();
   });
+
+  it("navigates back to login page when signing out", async () => {
+    jest.useFakeTimers();
+
+    axios.get.mockResolvedValue({
+      data: {
+        id: "1",
+        email: "test@test.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      },
+    });
+    render(<Settings userEmail="test@test.com" />, {
+      wrapper: MemoryRouter,
+    });
+    await screen.findByDisplayValue("Jane");
+    const signOutButton = screen.getByRole("button", { name: /Sign Out/i });
+    fireEvent.click(signOutButton);
+    jest.runAllTimers();
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/login");
+    });
+    expect(localStorage.length).toBe(0);
+    jest.useRealTimers();
+  });
 });

@@ -37,24 +37,24 @@ const Login = ({ onLogin }) => {
         }
       );
 
-      if (loginResponse.status === 200) {
-        const { data: userData } = await axios.get(
+      if (loginResponse.status === 200 && loginResponse.data.jwt) {
+        localStorage.setItem("jwt", loginResponse.data.jwt);
+
+        const { data } = await axios.get(
           `http://localhost:8080/api/auth/user?email=${encodeURIComponent(
             formData.email
           )}`
         );
+        localStorage.setItem("user", JSON.stringify(data));
 
-        localStorage.setItem("user", JSON.stringify(userData));
-
-        if (onLogin) onLogin(userData.email);
+        onLogin(data.email);
         navigate("/statistics");
       }
     } catch (err) {
-      console.error("Login failed:", err);
-      if (err.response && err.response.status === 401) {
-        setError("Username or password is incorrect – please try again.");
+      if (err.response.data.message && err.response.status === 401) {
+        setError(err.response.data.message);
       } else {
-        setError(err.response?.data || "Failed to login. Please try again.");
+        setError("Failed to login");
       }
     } finally {
       setLoading(false);
