@@ -125,6 +125,7 @@ const Settings = ({ userEmail, onLogout }) => {
           setSuccess("Profile updated successfully!");
           setUserData(formData); // Update baseline
           localStorage.setItem("user", JSON.stringify(formData));
+          setIsEditing(false);
         } else {
           setError(data);
         }
