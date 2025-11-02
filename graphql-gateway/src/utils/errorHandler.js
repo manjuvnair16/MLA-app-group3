@@ -1,4 +1,19 @@
+import { ValidationError } from './validation.js';
+
 export const handleServiceError = (error, operation) => {
+  // Handle ValidationError instances - re-throw as-is to preserve validation details
+  if (error instanceof ValidationError) {
+    console.warn(`GraphQL ${operation} Validation Error:`, {
+      message: error.message,
+      field: error.field,
+      code: error.code,
+      timestamp: new Date().toISOString()
+    });
+    // Re-throw ValidationError to preserve field and code information
+    throw error;
+  }
+
+  // Handle service/network errors
   console.error(`GraphQL ${operation} Error:`, {
     message: error.message,
     status: error.response?.status,

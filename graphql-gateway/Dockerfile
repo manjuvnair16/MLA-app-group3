@@ -1,4 +1,4 @@
-FROM node:14-alpine
+FROM node:18-alpine
 WORKDIR /app
 RUN npm i -g npm@8
 

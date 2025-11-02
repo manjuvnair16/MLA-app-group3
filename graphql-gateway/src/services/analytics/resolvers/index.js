@@ -1,5 +1,9 @@
 import { AnalyticsService } from '../datasource/analyticsService.js';
 import { handleServiceError, retryWithFallback } from '../../../utils/errorHandler.js';
+import { 
+  validateUsername, 
+  validateDateRange,
+} from '../../../utils/validation.js';
 
 /**
  * Analytics Service Instance
@@ -40,8 +44,11 @@ const analyticsQueryResolvers = {
    */
   userStats: async (_, { username }, context) => {
     try {
+      // Validate username input
+      const validatedUsername = validateUsername(username);
+      
       return await retryWithFallback(async () => {
-        return await analyticsService.getUserStats(username, context);
+        return await analyticsService.getUserStats(validatedUsername, context);
       });
     } catch (error) {
       handleServiceError(error, 'fetch user stats');
@@ -54,8 +61,17 @@ const analyticsQueryResolvers = {
    */
   weeklyStats: async (_, { username, startDate, endDate }, context) => {
     try {
+      // Validate username and date range inputs
+      const validatedUsername = validateUsername(username);
+      const validatedDates = validateDateRange(startDate, endDate);
+      
       return await retryWithFallback(async () => {
-        return await analyticsService.getWeeklyStats(username, startDate, endDate, context);
+        return await analyticsService.getWeeklyStats(
+          validatedUsername, 
+          validatedDates.startDate, 
+          validatedDates.endDate, 
+          context
+        );
       });
     } catch (error) {
       handleServiceError(error, 'fetch weekly stats');

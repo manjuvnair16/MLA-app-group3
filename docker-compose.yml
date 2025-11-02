@@ -92,10 +92,56 @@ services:
     networks:
       - app-network
 
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus:/etc/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=cfgmla23
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    networks:
+      - app-network
+  node_exporter: # New service for Node Exporter
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    pid: host # This allows it to see host processes
+    volumes:
+      # Mount host's /proc and /sys for metrics collection
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro # Mount root filesystem for disk stats
+    command:
+      # Tell Node Exporter where to find the host's filesystems
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host'
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    networks:
+      - app-network
+
+
+ 
 networks:
   app-network:
     driver: bridge
 
 volumes:
   mongodbdata:
+  grafana_data:
 

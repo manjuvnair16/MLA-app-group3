@@ -1,5 +1,10 @@
 import { ActivityService } from '../datasource/activityService.js';
 import { handleServiceError, retryWithFallback } from '../../../utils/errorHandler.js';
+import { 
+  validateID, 
+  validateAddExerciseInput, 
+  validateUpdateExerciseInput,
+} from '../../../utils/validation.js';
 
 /**
  * Activity Service Instance
@@ -28,11 +33,12 @@ const queryResolvers = {
    */
   exercise: async (_, { id }, context) => {
     try {
-      const result = await activityService.getExerciseById(id, context);
+      // Validate ID input
+      const validatedID = validateID(id);
+      const result = await activityService.getExerciseById(validatedID, context);
       return result;
     } catch (error) {
-      console.error(`Error in exercise resolver for ID ${id}:`, error);
-      return null;
+      handleServiceError(error, 'get exercise');
     }
   }
 };
@@ -46,8 +52,11 @@ const mutationResolvers = {
    */
   addExercise: async (_, { input }, context) => {
     try {
+      // Validate and sanitize input
+      const validatedInput = validateAddExerciseInput(input);
+      
       return await retryWithFallback(async () => {
-        return await activityService.addExercise(input, context);
+        return await activityService.addExercise(validatedInput, context);
       });
     } catch (error) {
       handleServiceError(error, 'add exercise');
@@ -59,8 +68,12 @@ const mutationResolvers = {
    */
   updateExercise: async (_, { id, input }, context) => {
     try {
+      // Validate ID and input
+      const validatedID = validateID(id);
+      const validatedInput = validateUpdateExerciseInput(input);
+      
       return await retryWithFallback(async () => {
-        return await activityService.updateExercise(id, input, context);
+        return await activityService.updateExercise(validatedID, validatedInput, context);
       });
     } catch (error) {
       handleServiceError(error, 'update exercise');
@@ -72,8 +85,11 @@ const mutationResolvers = {
    */
   deleteExercise: async (_, { id }, context) => {
     try {
+      // Validate ID input
+      const validatedID = validateID(id);
+      
       return await retryWithFallback(async () => {
-        return await activityService.deleteExercise(id, context);
+        return await activityService.deleteExercise(validatedID, context);
       });
     } catch (error) {
       handleServiceError(error, 'delete exercise');
