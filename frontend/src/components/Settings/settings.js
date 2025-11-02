@@ -12,6 +12,25 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
+const validateName = (value) => {
+  const trimmed = value.trim();
+  if (/<[^>]*>/g.test(trimmed)) {
+    return { valid: false, message: "Invalid characters detected." };
+  }
+  const nameRegex = /^[a-zA-Z\s'-]+$/;
+  if (!nameRegex.test(trimmed)) {
+    return {
+      valid: false,
+      message:
+        "Names can only contain letters, spaces, apostrophes, and hyphens.",
+    };
+  }
+  if (trimmed.length < 1 || trimmed.length > 50) {
+    return { valid: false, message: "Name must be between 1–50 characters." };
+  }
+  return { valid: true };
+};
+
 const Settings = ({ userEmail, onLogout }) => {
   const [formData, setFormData] = useState({
     id: "",
@@ -20,6 +39,7 @@ const Settings = ({ userEmail, onLogout }) => {
     lastName: "",
   });
 
+  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -37,12 +57,14 @@ const Settings = ({ userEmail, onLogout }) => {
           )}`
         );
 
-        setFormData({
+        const user = {
           id: data.id,
           email: data.email || "",
           firstName: data.firstName || "",
           lastName: data.lastName || "",
-        });
+        };
+        setFormData(user);
+        setUserData(user);
         setError("");
       } catch (err) {
         console.error("Error fetching user:", err);
@@ -61,13 +83,20 @@ const Settings = ({ userEmail, onLogout }) => {
       fetchUser();
     } else {
       const localUser = JSON.parse(localStorage.getItem("user"));
-      if (localUser) setFormData(localUser);
+      if (localUser) {
+        setFormData(localUser);
+        setUserData(localUser);
+      }
       setLoading(false);
     }
   }, [userEmail]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "firstName" || name === "lastName") {
+      const { valid } = validateName(value);
+      if (!valid && value !== "") return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -76,7 +105,11 @@ const Settings = ({ userEmail, onLogout }) => {
     setError("");
     setSuccess("");
 
-    if (isEditing) {
+    const hasChanged =
+      formData.firstName !== userData.firstName ||
+      formData.lastName !== userData.lastName;
+
+    if (hasChanged) {
       try {
         const payload = {
           firstName: formData.firstName,
@@ -90,6 +123,7 @@ const Settings = ({ userEmail, onLogout }) => {
 
         if (data === "User details updated successfully") {
           setSuccess("Profile updated successfully!");
+          setUserData(formData); // Update baseline
           localStorage.setItem("user", JSON.stringify(formData));
         } else {
           setError(data);
@@ -103,9 +137,9 @@ const Settings = ({ userEmail, onLogout }) => {
                 "An error occurred while saving changes. Please try again."
         );
       }
+    } else {
+      setIsEditing((prev) => !prev);
     }
-
-    setIsEditing((prev) => !prev);
   };
 
   const handleSignOut = () => {
@@ -113,7 +147,6 @@ const Settings = ({ userEmail, onLogout }) => {
     localStorage.removeItem("userId");
     localStorage.removeItem("userEmail");
     if (onLogout) onLogout();
-
     setLogoutSnackbar(true);
     setTimeout(() => {
       navigate("/login");
@@ -131,6 +164,15 @@ const Settings = ({ userEmail, onLogout }) => {
       </Box>
     );
   }
+
+  const isSaveDisabled =
+    !formData.firstName.trim() || !formData.lastName.trim();
+
+  const fieldLabels = {
+    email: "Email",
+    firstName: "First Name",
+    lastName: "Last Name",
+  };
 
   return (
     <>
@@ -173,10 +215,19 @@ const Settings = ({ userEmail, onLogout }) => {
         <Stack spacing={2.5}>
           {["email", "firstName", "lastName"].map((field) => {
             const isEmailField = field === "email";
+            const label = fieldLabels[field];
             return (
               <TextField
                 key={field}
-                label={field.charAt(0).toUpperCase() + field.slice(1)}
+                label={
+                  isEmailField ? (
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      {label}
+                    </Box>
+                  ) : (
+                    label
+                  )
+                }
                 variant="standard"
                 fullWidth
                 name={field}
@@ -185,27 +236,48 @@ const Settings = ({ userEmail, onLogout }) => {
                 onChange={handleInputChange}
                 InputProps={{
                   readOnly: isEmailField ? true : !isEditing,
+                  sx: isEmailField
+                    ? {
+                        "&:before, &:after": {
+                          borderBottom: "none",
+                        },
+                        "&:hover:not(.Mui-disabled, .Mui-error):before": {
+                          borderBottom: "none",
+                        },
+                        "& .MuiInputBase-input": {
+                          cursor: "not-allowed",
+                          color: "text.secondary",
+                        },
+                      }
+                    : {},
                 }}
-                sx={{
-                  "& .MuiInput-underline:before": {
-                    borderBottomColor:
-                      isEditing && !isEmailField ? "#f44336" : "#ccc",
-                  },
-                  "& .MuiInput-underline:after": {
-                    borderBottomColor:
-                      isEditing && !isEmailField ? "#f44336" : "#1976d2",
-                  },
-                  "& .MuiFormLabel-root": {
-                    color:
-                      isEditing && !isEmailField
-                        ? "#f44336"
-                        : "rgba(0,0,0,0.6)",
-                  },
-                  "&:hover .MuiInput-underline:before": {
-                    borderBottomColor:
-                      isEditing && !isEmailField ? "#e53935" : "#000",
-                  },
-                }}
+                InputLabelProps={
+                  isEmailField
+                    ? {
+                        sx: {
+                          color: "#9e9e9e",
+                          "&.Mui-focused": {
+                            color: "#9e9e9e",
+                          },
+                          "&.Mui-error": { color: "#9e9e9e" },
+                        },
+                      }
+                    : {}
+                }
+                required={!isEmailField}
+                error={
+                  (isEditing && !isEmailField && !formData[field].trim()) ||
+                  !validateName(formData[field]).valid
+                }
+                helperText={
+                  !isEmailField && isEditing && !formData[field].trim()
+                    ? "This field is required"
+                    : isEditing &&
+                      !isEmailField &&
+                      !validateName(formData[field]).valid
+                    ? validateName(formData[field]).message
+                    : ""
+                }
               />
             );
           })}
@@ -213,22 +285,33 @@ const Settings = ({ userEmail, onLogout }) => {
           <Button
             type="submit"
             variant="contained"
+            disabled={isEditing && isSaveDisabled}
             sx={{
               mt: 3,
               borderRadius: "30px",
               py: 1.5,
-              backgroundColor: isEditing ? "#d32f2f" : "var(--color-primary)",
               fontWeight: "bold",
+              backgroundColor: isEditing ? "#d32f2f" : "var(--color-primary)",
+              transition: "background-color 0.3s ease, color 0.3s ease",
+              color: "#fff",
+
+              "&.Mui-disabled": {
+                backgroundColor: "#bdbdbd !important",
+                color: "#757575 !important",
+                pointerEvents: "none",
+                boxShadow: "none",
+              },
+
               "&:hover": {
                 backgroundColor: isEditing
                   ? "#b71c1c"
                   : "var(--color-primary-600)",
               },
-              transition: "background-color 0.3s ease",
             }}
           >
             {isEditing ? "Save" : "Edit"}
           </Button>
+
           <Button
             variant="outlined"
             color="error"
@@ -249,6 +332,7 @@ const Settings = ({ userEmail, onLogout }) => {
           </Button>
         </Stack>
       </Box>
+
       <Snackbar
         open={logoutSnackbar}
         autoHideDuration={3000}

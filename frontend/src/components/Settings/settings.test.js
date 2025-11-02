@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import axios from "axios";
 import { MemoryRouter } from "react-router-dom";
 import Settings from "./settings.js";
@@ -16,7 +22,7 @@ beforeEach(() => {
 });
 describe("Settings Component", () => {
   it("fetches and displays user data", async () => {
-    axios.get.mockResolvedValueOnce({
+    axios.get.mockResolvedValue({
       data: {
         id: "1",
         email: "test@example.com",
@@ -35,7 +41,7 @@ describe("Settings Component", () => {
   });
 
   it("toggles edit mode when clicking edit button", async () => {
-    axios.get.mockResolvedValueOnce({
+    axios.get.mockResolvedValue({
       data: {
         id: "1",
         email: "test@example.com",
@@ -55,7 +61,7 @@ describe("Settings Component", () => {
   });
 
   it("saves updated first/last name", async () => {
-    axios.get.mockResolvedValueOnce({
+    axios.get.mockResolvedValue({
       data: {
         id: "1",
         email: "test@example.com",
@@ -63,7 +69,7 @@ describe("Settings Component", () => {
         lastName: "Doe",
       },
     });
-    axios.patch.mockResolvedValueOnce({
+    axios.patch.mockResolvedValue({
       data: "User details updated successfully",
     });
 
@@ -75,7 +81,7 @@ describe("Settings Component", () => {
 
     fireEvent.click(screen.getByText(/edit/i));
 
-    const firstNameInput = screen.getByLabelText(/FirstName/i);
+    const firstNameInput = screen.getByLabelText(/First Name/i);
     fireEvent.change(firstNameInput, { target: { value: "Janet" } });
 
     fireEvent.click(screen.getByText(/save/i));
@@ -93,7 +99,7 @@ describe("Settings Component", () => {
   });
 
   it("handles API error gracefully", async () => {
-    axios.get.mockResolvedValueOnce({
+    axios.get.mockResolvedValue({
       data: {
         id: "1",
         email: "test@example.com",
@@ -101,7 +107,7 @@ describe("Settings Component", () => {
         lastName: "Doe",
       },
     });
-    axios.patch.mockRejectedValueOnce({
+    axios.patch.mockRejectedValue({
       response: { data: "An error occurred while saving changes" },
     });
 
@@ -110,10 +116,14 @@ describe("Settings Component", () => {
     });
 
     await screen.findByDisplayValue("Jane");
-    fireEvent.click(screen.getByText(/edit/i));
-    fireEvent.click(screen.getByText(/save/i));
+    fireEvent.click(screen.getByRole("button", { name: /edit/i }));
+    const firstNameInput = screen.getByLabelText(/First Name/i);
+    fireEvent.change(firstNameInput, { target: { value: "Janet" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    expect(await screen.findByText(/An error occurred/i)).toBeInTheDocument();
+    const alert = await waitFor(() => screen.findByRole("alert"));
+
+    expect(within(alert).getByText(/An error occurred/i)).toBeInTheDocument();
   });
 
   it("navigates back to login page when signing out", async () => {
@@ -139,5 +149,53 @@ describe("Settings Component", () => {
     });
     expect(localStorage.length).toBe(0);
     jest.useRealTimers();
+  });
+
+  it("prevents invalid characters in name fields", async () => {
+    axios.get.mockResolvedValue({
+      data: {
+        id: "1",
+        email: "test@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      },
+    });
+
+    render(<Settings userEmail="test@example.com" />, {
+      wrapper: MemoryRouter,
+    });
+    await screen.findByDisplayValue("Jane");
+    fireEvent.click(screen.getByText(/edit/i));
+    const firstNameInput = screen.getByLabelText(/First Name/i);
+    fireEvent.change(firstNameInput, { target: { value: "Jane<>" } });
+
+    expect(firstNameInput.value).toBe("Jane");
+  });
+
+  it("disables save button when name fields are empty", async () => {
+    axios.get.mockResolvedValue({
+      data: {
+        id: "1",
+        email: "test@example.com",
+        firstName: "Jane",
+        lastName: "Doe",
+      },
+    });
+
+    render(<Settings userEmail="test@example.com" />, {
+      wrapper: MemoryRouter,
+    });
+
+    await screen.findByDisplayValue("Jane");
+    fireEvent.click(screen.getByText(/edit/i));
+    fireEvent.change(screen.getByLabelText(/First Name/i), {
+      target: { value: "" },
+    });
+    fireEvent.change(screen.getByLabelText(/Last Name/i), {
+      target: { value: "" },
+    });
+
+    const saveBtn = screen.getByRole("button", { name: /save/i });
+    expect(saveBtn).toBeDisabled();
   });
 });
