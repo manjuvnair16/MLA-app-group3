@@ -70,12 +70,6 @@ public class AuthController {
             return ResponseEntity.status(404).body("User not found");
         }
 
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            if (userRepository.existsByEmail(request.getEmail())) {
-                return ResponseEntity.badRequest().body("Email already in use");
-            }
-            user.setEmail(request.getEmail());
-        }
         if (request.getFirstName() != null) {
             user.setFirstName(request.getFirstName());
         }
@@ -93,7 +87,7 @@ public class AuthController {
             // Normalise and validate email
             String email = request.getEmail().trim().toLowerCase();
             ValidationUtils.validateEmailAddressConstraints(email);
-            
+
             if (userRepository.existsByEmail(email)) {
                 return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email already registered - please log in"));
             }

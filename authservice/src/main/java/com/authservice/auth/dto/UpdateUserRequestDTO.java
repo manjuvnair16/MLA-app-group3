@@ -1,26 +1,13 @@
 package com.authservice.auth.dto;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
 public class UpdateUserRequestDTO {
-    @Email(message = "Invalid email format")
-    @Size(max = 254)
-    private String email;
-
     @Size(min = 1, max = 50, message = "First name must be between 1 and 50 characters")
     private String firstName;
 
     @Size(min = 1, max = 50, message = "Last name must be between 1 and 50 characters")
     private String lastName;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
 
     public String getFirstName() {
         return firstName;
