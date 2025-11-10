@@ -6,6 +6,7 @@ from jinja2 import Template
 from langchain_groq.chat_models import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.output_parsers.structured import StructuredOutputParser, ResponseSchema
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}},
@@ -22,18 +23,19 @@ groq_api = os.getenv("GROQ_API_KEY")
 # Initialize LLM model
 groq = ChatGroq(api_key=groq_api, 
                 model="llama-3.1-8b-instant", 
+               # model="openai/gpt-oss-20b",
                 temperature=0.0,
                 max_retries=2)
 
 # Define output schema
 schemas = [
     ResponseSchema(name="exerciseType", description="The type of activity from the list ['Running', 'Cycling', 'Swimming', 'Gym', 'Other']. If the activity is not one of the first four (for example 'Yoga', 'Walking', 'Football', 'Stretching', 'Pilates', 'Cricket', 'Sports', etc.), return 'Other'"),
-    ResponseSchema(name="duration", description="The time spent on the exercise in **minutes**, extracted as a **plain integer**. For '30mins running', the value should be **30**. Do not include units like 'minutes' or 'hrs'. For duration like4mins 10seconds five hours, the value should be converted to minutes, **304.16**."),
+    ResponseSchema(name="duration", description="The time spent on the exercise in **minutes**, extracted as a **plain integer**. For '30mins running', the value should be **30**. Do not include units like 'minutes' or 'hrs'. For duration like 4mins 10seconds five hours, the value should be converted to minutes, **304.16**."),
    # ResponseSchema(name="distance", description="Distance covered, e.g., 5 km"),
    # ResponseSchema(name="intensity", description="Low, medium, high"),
    # ResponseSchema(name="time_of_day", description="Morning, afternoon, evening"),
     ResponseSchema(name="description", description="Short summary like the intensity of the activity, location, time of the day or anything else mentioned other then duration, activity or date"),
-    ResponseSchema(name="date", description="The date the exercise was performed. If the input uses relative terms (e.g., 'yesterday', 'today', 'last week', 'tomorrow', 'this week), convert it to the **yyyy/MM/dd** format. If a specific date is mentioned, ensure it is in the **yyyy/MM/dd** format. For example, 'yesterday' might become '2025/10/25'.")
+    ResponseSchema(name="date", description="The date the exercise was performed. If the input uses relative date terms (e.g., 'yesterday', 'today', 'last week', 'tomorrow', 'this week), get the absolute date using today's date. Calculate the date for the relative term and convert it to the **yyyy/MM/dd** format. Assume 'week' means 7 days prior or after today's date unless a weekday is mentioned. If a specific date is mentioned, ensure it is in the **yyyy/MM/dd** format. If a specific week day is mentioned, infer the date using today's date and from that today's week day")
 ]
 
 # Define output parser
@@ -48,9 +50,9 @@ Extract structured workout data in JSON from this text:
 {format_instructions}
 """)
 
-def parse_activity(transcript: str):
+def parse_activity(transcript: str, today_date: str = None):
     prompt = prompt_template.format_prompt(
-        input_text=transcript,
+        input_text=f" For your information, today's date is {today_date}. " + transcript,
         format_instructions=parser.get_format_instructions()
     )
 
@@ -79,8 +81,9 @@ def speech_to_text_parser_route():
         return jsonify({"error": "Transcript is required"}), 400
 
     try:
+        today_dt = datetime.now().strftime("%Y/%m/%d")
         # Define prompt template
-        parsed_data = parse_activity(transcript)
+        parsed_data = parse_activity(transcript, today_dt)
         return jsonify({"parsed": parsed_data}), 200
     except Exception as e:
         print("Error parsing activity:", str(e))
