@@ -1,4 +1,4 @@
-package com.authservice.auth.model;
+package com.authservice.auth.dto;
 
 public class AuthResponseDTO {
     private String jwt;

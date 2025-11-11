@@ -1,12 +1,17 @@
 package com.authservice.auth.controller;
 
-import com.authservice.auth.model.UpdateUserRequestDTO;
 import com.authservice.auth.model.User;
-import com.authservice.auth.model.UserResponseDTO;
-import com.authservice.auth.model.AuthResponseDTO;
-import com.authservice.auth.model.ErrorResponseDTO;
+import com.authservice.auth.dto.AuthResponseDTO;
+import com.authservice.auth.dto.ErrorResponseDTO;
+import com.authservice.auth.dto.LoginRequestDTO;
+import com.authservice.auth.dto.SignUpRequestDTO;
+import com.authservice.auth.dto.UpdateUserRequestDTO;
+import com.authservice.auth.dto.UserResponseDTO;
 import com.authservice.auth.repository.UserRepository;
 import com.authservice.auth.service.JwtService;
+import com.authservice.auth.util.ValidationUtils;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -65,12 +70,6 @@ public class AuthController {
             return ResponseEntity.status(404).body("User not found");
         }
 
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            if (userRepository.existsByEmail(request.getEmail())) {
-                return ResponseEntity.badRequest().body("Email already in use");
-            }
-            user.setEmail(request.getEmail());
-        }
         if (request.getFirstName() != null) {
             user.setFirstName(request.getFirstName());
         }
@@ -83,63 +82,46 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
-        // Supports legacy registration with username, and new email registration
-        // TODO: deprecate username registration
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequestDTO request) {
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            // Normalise and validate email
+            String email = request.getEmail().trim().toLowerCase();
+            ValidationUtils.validateEmailAddressConstraints(email);
 
-        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-            // registration with email
-            String email = user.getEmail();
             if (userRepository.existsByEmail(email)) {
                 return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email already registered - please log in"));
             }
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            User user = new User();
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setFirstName(request.getFirstName());
+            user.setLastName(request.getLastName());
             userRepository.save(user);
             String jwt = jwtService.generateToken(email);
             AuthResponseDTO response = new AuthResponseDTO(jwt, "User registered successfully!");
             return ResponseEntity.ok(response);
-        } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
-            // legacy registration with username
-            String username = user.getUsername();
-            if (userRepository.existsByUsername(username)) {
-                return ResponseEntity.badRequest().body(new ErrorResponseDTO("User already exists - please log in"));
-            }
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            userRepository.save(user);
-            String jwt = jwtService.generateToken(username);
-            AuthResponseDTO response = new AuthResponseDTO(jwt, "User registered successfully!");
-            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Username or email must be provided"));
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email must be provided"));
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody User user) {
-        // Supports login with either username or email
-        // TODO: deprecate username login
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequestDTO request) {
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            // Normalise and validate email
+            String email = request.getEmail().trim().toLowerCase();
+            ValidationUtils.validateEmailAddressConstraints(email);
 
-        User existingUser = null;
-        String identifier = null;
-
-        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-            // login with email
-            identifier = user.getEmail();
-            existingUser = userRepository.findByEmail(identifier);
-        } else if (user.getUsername() != null && !user.getUsername().isEmpty()) {
-            // legacy login with username
-            identifier = user.getUsername();
-            existingUser = userRepository.findByUsername(identifier);
+            User existingUser = userRepository.findByEmail(email);
+            if (existingUser != null && passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
+                String jwt = jwtService.generateToken(email);
+                AuthResponseDTO response = new AuthResponseDTO(jwt, "User authenticated");
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(401).body(new ErrorResponseDTO("Email or password is incorrect - please try again"));
+            }
         } else {
-            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Username or email must be provided"));
-        }
-        
-        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
-            String jwt = jwtService.generateToken(identifier);
-            AuthResponseDTO response = new AuthResponseDTO(jwt, "User authenticated");
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(401).body(new ErrorResponseDTO("Email or password is incorrect - please try again"));
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email must be provided")); 
         }
     }
 }
