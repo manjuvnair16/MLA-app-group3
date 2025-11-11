@@ -118,7 +118,7 @@ public class AuthController {
 
             User existingUser = userRepository.findByEmail(email);
             if (existingUser != null && passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
-                String jwt = jwtService.generateToken(email);
+                String jwt = jwtService.createUserToken(email);
                 AuthResponseDTO response = new AuthResponseDTO(jwt, "User authenticated");
                 return ResponseEntity.ok(response);
             } else {
