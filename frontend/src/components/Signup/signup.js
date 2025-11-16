@@ -30,6 +30,42 @@ const Signup = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const resetForm = () => {
+    setSubmitted(false);
+    setSuccess("");
+    setError("");
+    setFormData({
+      email: "",
+      firstName: "",
+      lastName: "",
+      password: "",
+      confirmPassword: ""
+    });
+  };
+
+  const handleResendVerification = async (email) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/resend-verification",
+        { email }
+      );
+
+      if (response.status === 200) {
+        setError("");
+        setSuccess("Verification email has been resent");
+      }
+    } catch (err) {
+      setSuccess("");
+      setError(
+        err.response?.data?.message ||
+          "Failed to resend verification email, please try again later"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
     if (isLoading) return;
@@ -100,26 +136,16 @@ const Signup = () => {
             </Typography>
             <Typography sx={{ mb: 2}}>
               Didn't receive the email?{" "}
-              <Button variant="text" onClick={() => {}}>
-                Resend email
+              <Button variant="text" disabled={isLoading} onClick={() => handleResendVerification(formData.email)}>
+                {isLoading ? <CircularProgress size={24} color="inherit"/> 
+                : "Resend email"}
               </Button>
             </Typography>
 
             <Box sx={{ display: "flex", justifyContent: "center" }}> 
               <Button 
                 variant="contained" 
-                onClick={() => {
-                  setSubmitted(false);
-                  setSuccess("");
-                  setError("");
-                  setFormData({
-                    email: "",
-                    firstName: "",
-                    lastName: "",
-                    password: "",
-                    confirmPassword: ""
-                  });
-                }}
+                onClick={() => {resetForm()}}
               >
                 Back to sign up
               </Button>

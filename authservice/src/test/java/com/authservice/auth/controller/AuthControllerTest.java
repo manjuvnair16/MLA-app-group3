@@ -17,6 +17,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
 
 import com.authservice.auth.dto.AuthResponseDTO;
@@ -342,5 +344,37 @@ public class AuthControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Email verified successfully", response.getBody());
         assertTrue(user.isVerified());
+    }
+
+    @Test
+    public void resendVerificationEmail_whenRequestTooSoon_ReturnsTooManyRequests() {
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+        user.setVerificationEmailSentAt(Instant.now());
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+
+        ResponseEntity<?> response = authController.resendVerificationEmail(Collections.singletonMap("email", EMAIL));
+
+        verify(userRepository).findByEmail(EMAIL);
+
+        assertEquals(429, response.getStatusCodeValue());
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
+        assertTrue(body.getMessage().contains("Please wait before requesting another verification email"));
+    }
+
+    @Test
+    public void resendVerificationEmail_whenValidRequest_resendsEmail() {
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+        user.setVerificationEmailSentAt(Instant.now().minusSeconds(120));
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+
+        ResponseEntity<?> response = authController.resendVerificationEmail(Collections.singletonMap("email", EMAIL));
+
+        verify(userRepository).findByEmail(EMAIL);
+        verify(emailService).sendVerificationEmail(user);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Verification email resent", response.getBody());
     }
 }

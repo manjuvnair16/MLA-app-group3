@@ -20,27 +20,26 @@ const Verify = () => {
     setToken(emailToken);
   }, []);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!token) return;
     setStatus("verifying");
     setMessage("");
-    axios
-      .get(`http://localhost:8080/api/auth/verify?token=${encodeURIComponent(token)}`)
-      .then(() => {
-        setStatus("success");
-        setMessage("Email verified successfully! Please log in.");
-      })
-      .catch((err) => {
-        setStatus("error");
-        setMessage("Verification failed: " + 
-            (err.response?.data?.message || "Something went wrong. Please try again."));
-      });
+
+    try {
+      await axios.get(`http://localhost:8080/api/auth/verify?token=${encodeURIComponent(token)}`);
+      setStatus("success");
+      setMessage("Email verified successfully! Please log in.");
+    } catch (err) {
+      setStatus("error");
+      setMessage("Verification failed: " + 
+          (err.response?.data?.message || "Something went wrong. Please try again."));
+    }
   }
 
 
   if (status === "verifying") {
     return (
-      <Box sx={{ mt: 6, textAlign: "center" }}>
+      <Box sx={{ textAlign: "center" }}>
         <CircularProgress />
         <Typography sx={{ mt: 2 }}>Verifying your email...</Typography>
       </Box>
@@ -48,7 +47,7 @@ const Verify = () => {
   }
 
   return (
-    <Box sx={{ mt: 6, textAlign: "center" }}>
+    <Box sx={{ textAlign: "center" }}>
       {status === "success" ? (
         <>
           <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>
