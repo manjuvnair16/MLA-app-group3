@@ -1,5 +1,7 @@
 package com.authservice.auth.model;
 
+import java.time.Instant;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -8,17 +10,17 @@ public class User {
 
     @Id
     private String id;
-    private String username; //legacy - to be deprecated
     private String email;
     private String firstName;
     private String lastName;
     private String password;
+    private boolean verified = false;
+    private Instant verificationEmailSentAt;
 
     public User() {
     }
 
-    public User(String username, String email, String firstName, String lastName, String password) {
-        this.username = username;
+    public User(String email, String firstName, String lastName, String password) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -32,14 +34,6 @@ public class User {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
@@ -74,4 +68,19 @@ public class User {
         this.lastName = lastName;
     }
 
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public Instant getVerificationEmailSentAt() {
+        return verificationEmailSentAt;
+    }
+
+    public void setVerificationEmailSentAt(Instant verificationEmailSentAt) {
+        this.verificationEmailSentAt = verificationEmailSentAt;
+    }
 }

@@ -9,6 +9,10 @@ public class AuthResponseDTO {
         this.message = message;
     }
 
+    public AuthResponseDTO(String message) {
+        this.message = message;
+    }
+
     public String getJwt() {
         return jwt;
     }

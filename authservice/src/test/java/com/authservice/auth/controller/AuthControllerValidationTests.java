@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.authservice.auth.model.User;
 import com.authservice.auth.repository.UserRepository;
+import com.authservice.auth.service.EmailService;
 import com.authservice.auth.service.JwtService;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,6 +38,9 @@ public class AuthControllerValidationTests {
 
     @MockBean
     private JwtService jwtService;
+
+    @MockBean
+    private EmailService emailService;
 
     private final String signupUrl = "/api/auth/signup";
     private final String loginUrl = "/api/auth/login";
@@ -80,16 +84,14 @@ public class AuthControllerValidationTests {
 
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("encoded");
-        when(jwtService.generateToken(anyString())).thenReturn("jwt");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         mockMvc.perform(post(signupUrl)
             .contentType(APPLICATION_JSON)
             .content(body))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.jwt").value("jwt"));
+            .andExpect(status().isOk());
         
-        verify(userRepository, times(1)).save(any(User.class));
+        verify(userRepository, times(2)).save(any(User.class));
     }
 
     @Test
@@ -111,10 +113,11 @@ public class AuthControllerValidationTests {
         User user = new User();
         user.setEmail("email@test.com");
         user.setPassword("encoded");
+        user.setVerified(true);
 
         when(userRepository.findByEmail("email@test.com")).thenReturn(user);
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-        when(jwtService.generateToken(anyString())).thenReturn("jwt");
+        when(jwtService.createUserToken(anyString())).thenReturn("jwt");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         mockMvc.perform(post(loginUrl)

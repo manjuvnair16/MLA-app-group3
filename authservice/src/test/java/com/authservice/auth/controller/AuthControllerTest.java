@@ -1,9 +1,11 @@
 package com.authservice.auth.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,9 +18,12 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
 
 import com.authservice.auth.dto.AuthResponseDTO;
+import com.authservice.auth.exception.InvalidTokenException;
 import com.authservice.auth.dto.ErrorResponseDTO;
 import com.authservice.auth.dto.SignUpRequestDTO;
 import com.authservice.auth.dto.LoginRequestDTO;
@@ -26,6 +31,7 @@ import com.authservice.auth.dto.UpdateUserRequestDTO;
 import com.authservice.auth.dto.UserResponseDTO;
 import com.authservice.auth.model.User;
 import com.authservice.auth.repository.UserRepository;
+import com.authservice.auth.service.EmailService;
 import com.authservice.auth.service.JwtService;
 
 public class AuthControllerTest {
@@ -37,7 +43,7 @@ public class AuthControllerTest {
     private static final String USER_ID = "testId";
     private static final String FIRST_NAME = "Jane";
     private static final String LAST_NAME = "Doe";
-    private static final String USER_REGISTERED_MSG = "User registered successfully!";
+    private static final String USER_REGISTERED_MSG = "User registered successfully! Please check your email to verify your account before logging in.";
     private static final String EMAIL_EXISTS_MSG = "Email already registered - please log in";
     private static final String USER_AUTHENTICATED_MSG = "User authenticated";
     private static final String INVALID_CREDENTIALS_MSG = "Email or password is incorrect - please try again";
@@ -53,13 +59,16 @@ public class AuthControllerTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock 
+    private EmailService emailService;
+
     @InjectMocks
     private AuthController authController;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        when(jwtService.generateToken(any(String.class))).thenReturn(JWT);
+        when(jwtService.createUserToken(any(String.class))).thenReturn(JWT);
     }
 
     private SignUpRequestDTO createSignUpRequest(String email, String password) {
@@ -104,10 +113,9 @@ public class AuthControllerTest {
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(USER_REGISTERED_MSG, body.getMessage());
-        assertEquals(JWT, body.getJwt());
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository, times(2)).save(userCaptor.capture());
         User savedUser = userCaptor.getValue();
 
         assertEquals(ENCODED_PASSWORD, savedUser.getPassword());
@@ -153,6 +161,7 @@ public class AuthControllerTest {
     public void authenticateUser_whenEmailAndPasswordCorrect_authenticatesUser() {
         LoginRequestDTO request = createLoginRequest(EMAIL, PASSWORD);
         User existingUser = createUser(EMAIL, ENCODED_PASSWORD, FIRST_NAME, LAST_NAME);
+        existingUser.setVerified(true);
 
         when(userRepository.findByEmail(EMAIL))
             .thenReturn(existingUser);
@@ -172,6 +181,7 @@ public class AuthControllerTest {
     public void authenticateUser_whenEmailCorrectPasswordIncorrect_returnsUnauthorized() {
         LoginRequestDTO request = createLoginRequest(EMAIL, WRONG_PASSWORD);
         User existingUser = createUser(EMAIL, ENCODED_PASSWORD, FIRST_NAME, LAST_NAME);
+        existingUser.setVerified(true);
 
         when(userRepository.findByEmail(EMAIL))
             .thenReturn(existingUser);
@@ -301,5 +311,71 @@ public class AuthControllerTest {
         assertEquals(USER_ID, user.getId());
         assertEquals(EMAIL, user.getEmail());
         assertEquals(PASSWORD, user.getPassword());
+    }
+
+    // Tests for verify
+    @Test
+    public void verifyEmail_whenTokenIsExpired_throwsInvalidTokenException() {
+        String expiredToken = "expired";
+        when(emailService.extractUserIdFromVerificationToken(expiredToken))
+            .thenThrow(new InvalidTokenException("Invalid or expired token"));
+
+        assertThrows(
+            InvalidTokenException.class, 
+            () -> authController.verifyEmail(expiredToken)
+        );
+    }
+
+    @Test
+    public void verifyEmail_whenValidToken_verifiesUser() {
+        final String TOKEN = "valid-verification-token";
+        when(emailService.extractUserIdFromVerificationToken(TOKEN)).thenReturn(USER_ID);
+
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+        user.setId(USER_ID);
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+
+        ResponseEntity<?> response = authController.verifyEmail(TOKEN);
+
+        verify(emailService).extractUserIdFromVerificationToken(TOKEN);
+        verify(userRepository).findById(USER_ID);
+        verify(userRepository).save(user);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Email verified successfully", response.getBody());
+        assertTrue(user.isVerified());
+    }
+
+    @Test
+    public void resendVerificationEmail_whenRequestTooSoon_ReturnsTooManyRequests() {
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+        user.setVerificationEmailSentAt(Instant.now());
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+
+        ResponseEntity<?> response = authController.resendVerificationEmail(Collections.singletonMap("email", EMAIL));
+
+        verify(userRepository).findByEmail(EMAIL);
+
+        assertEquals(429, response.getStatusCodeValue());
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
+        assertTrue(body.getMessage().contains("Please wait before requesting another verification email"));
+    }
+
+    @Test
+    public void resendVerificationEmail_whenValidRequest_resendsEmail() {
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+        user.setVerificationEmailSentAt(Instant.now().minusSeconds(120));
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+
+        ResponseEntity<?> response = authController.resendVerificationEmail(Collections.singletonMap("email", EMAIL));
+
+        verify(userRepository).findByEmail(EMAIL);
+        verify(emailService).sendVerificationEmail(user);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Verification email resent", response.getBody());
     }
 }

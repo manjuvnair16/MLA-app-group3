@@ -23,7 +23,7 @@ To do so manually:
 - Again, replace any placeholder values with the real values.
 
 Alternatively, run the script `create-env-files.sh` from the root directory to have the files and a JWT secret key automatically generated for you.
-You will still need to insert the API Key for **ai-speech-parser**.
+You will still need to insert the API Key for **ai-speech-parser**, and the mail service username and password in **authservice**.
 
 ### Current Features
 

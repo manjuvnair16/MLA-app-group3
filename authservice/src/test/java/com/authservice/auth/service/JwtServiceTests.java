@@ -4,18 +4,15 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
 public class JwtServiceTests {
+
     private JwtService jwtService;
 
-    @Value("${jwt.secret.key}")
-    private String TEST_SECRET;
+    private String TEST_SECRET = "secret-key-used-for-unit-tests-only";
     private final String TEST_USER = "test@test.com";
 
     @BeforeEach
@@ -34,20 +31,20 @@ public class JwtServiceTests {
 
     @Test
     public void testGenerateToken_NotNull() {
-        String token = jwtService.generateToken(TEST_USER);
+        String token = jwtService.createUserToken(TEST_USER);
         assertNotNull(token);
     }
 
     @Test
     public void testGenerateToken_ValidSubject() {
-        String token = jwtService.generateToken(TEST_USER);
+        String token = jwtService.createUserToken(TEST_USER);
         Claims claims = parseToken(token);
         assertEquals(TEST_USER, claims.getSubject());
     }
 
     @Test
     public void testGenerateToken_SetsExpirationInFuture() {
-        String token = jwtService.generateToken(TEST_USER);
+        String token = jwtService.createUserToken(TEST_USER);
         Claims claims = parseToken(token);
         assertTrue(claims.getExpiration().getTime() > System.currentTimeMillis());
     }

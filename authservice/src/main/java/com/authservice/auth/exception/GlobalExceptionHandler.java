@@ -27,4 +27,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(ValidationException ex) {
         return ResponseEntity.badRequest().body(new ErrorResponseDTO(ex.getMessage()));
     }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidTokenException(InvalidTokenException ex) {
+        return ResponseEntity.badRequest().body(new ErrorResponseDTO(ex.getMessage()));
+    }
 }

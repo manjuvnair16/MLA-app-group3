@@ -15,6 +15,9 @@ const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [unverified, setUnverified] = useState(false);
+  const [resendStatus, setResendStatus] = useState(""); // sending | sent | error
+  const [resendError, setResendError] = useState("");
 
   const navigate = useNavigate();
 
@@ -23,9 +26,31 @@ const Login = ({ onLogin }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleResendVerification = async () => {
+    setResendStatus("sending");
+    setResendError("");
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/resend-verification",
+        { email: formData.email }
+      );
+
+      if (response.status === 200) {
+        setResendStatus("sent");
+      }
+    } catch (err) {
+      setResendStatus("error");
+      setResendError(
+        err.response?.data?.message ||
+          "Failed to send email, please try again later"
+      );
+    }
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setUnverified(false);
     setLoading(true);
 
     try {
@@ -51,7 +76,10 @@ const Login = ({ onLogin }) => {
         navigate("/statistics");
       }
     } catch (err) {
-      if (err.response.data.message && err.response.status === 401) {
+      if (err.response && err.response.status === 403) {
+        setError("Your account has not been verified. Please click the link sent to your email.");
+        setUnverified(true);
+      } else if (err.response.data.message && err.response.status === 401) {
         setError(err.response.data.message);
       } else {
         setError("Failed to login");
@@ -87,9 +115,35 @@ const Login = ({ onLogin }) => {
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity={unverified ? "warning" : "error"} sx={{ mb: 2 }}>
           {error}
         </Alert>
+      )}
+
+      {unverified && (
+        <Box sx={{ mb: 2}}>
+          <Typography variant="body2">
+            Didn't receive the email? 
+            <Button 
+              variant="text" 
+              disabled={resendStatus === "sending"} 
+              onClick={() => handleResendVerification(formData.email)}
+            >
+              {resendStatus === "sending" ? <CircularProgress size={20} color="inherit"/> 
+              : "Resend email"}
+            </Button>
+          </Typography>
+          {resendStatus === "sent" && (
+            <Typography variant="body2" color="success.main" sx={{ mb: 2 }}>
+              Verification email sent! Please check your inbox.
+            </Typography>
+          )}
+          {resendStatus === "error" && (
+            <Typography variant="body2" color="error.main" sx={{ mb: 2 }}>
+              {resendError}
+            </Typography>
+          )}
+        </Box>
       )}
 
       <Stack spacing={2.5}>

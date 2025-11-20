@@ -45,6 +45,7 @@ services:
     environment:
       - SPRING_DATA_MONGODB_DATABASE=test
       - SPRING_DATA_MONGODB_URI=mongodb://root:cfgmla23@mongodb:27017
+      - FRONTEND_URL=http://localhost
     ports:
       - "8080:8080"
     depends_on:

@@ -16,6 +16,7 @@ import Login from "./components/Login/login.js";
 import Signup from "./components/Signup/signup.js";
 import Journal from "./components/Journal/journal.js";
 import Settings from "./components/Settings/settings.js";
+import Verify from "./components/Verify/verify.js";
 import logo from "./img/CFG_logo.png"; // Update the path to your logo file
 
 function App() {
@@ -103,12 +104,7 @@ function App() {
                 isLoggedIn ? (
                   <Navigate to="/" />
                 ) : (
-                  <Signup
-                    onSignup={(username) => {
-                      setIsLoggedIn(true);
-                      setCurrentUser(username);
-                    }}
-                  />
+                  <Signup/>
                 )
               }
             />
@@ -161,6 +157,12 @@ function App() {
                   <Navigate to="/login" />
                 )
               }
+            />
+            <Route 
+              path="/verify" 
+              element={
+              <Verify />
+              } 
             />
           </Routes>
         </div>
