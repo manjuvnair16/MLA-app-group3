@@ -45,7 +45,7 @@ const Login = ({ onLogin }) => {
           "Failed to send email, please try again later"
       );
     }
-  }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -77,7 +77,9 @@ const Login = ({ onLogin }) => {
       }
     } catch (err) {
       if (err.response && err.response.status === 403) {
-        setError("Your account has not been verified. Please click the link sent to your email.");
+        setError(
+          "Your account has not been verified. Please click the link sent to your email."
+        );
         setUnverified(true);
       } else if (err.response.data.message && err.response.status === 401) {
         setError(err.response.data.message);
@@ -121,16 +123,19 @@ const Login = ({ onLogin }) => {
       )}
 
       {unverified && (
-        <Box sx={{ mb: 2}}>
+        <Box sx={{ mb: 2 }}>
           <Typography variant="body2">
-            Didn't receive the email? 
-            <Button 
-              variant="text" 
-              disabled={resendStatus === "sending"} 
+            Didn't receive the email?
+            <Button
+              variant="text"
+              disabled={resendStatus === "sending"}
               onClick={() => handleResendVerification(formData.email)}
             >
-              {resendStatus === "sending" ? <CircularProgress size={20} color="inherit"/> 
-              : "Resend email"}
+              {resendStatus === "sending" ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                "Resend email"
+              )}
             </Button>
           </Typography>
           {resendStatus === "sent" && (
@@ -168,6 +173,27 @@ const Login = ({ onLogin }) => {
           value={formData.password}
           onChange={handleChange}
         />
+
+        <Box sx={{ textAlign: "right" }}>
+          <Button
+            component={RouterLink}
+            to="/forgot-password"
+            variant="text"
+            sx={{
+              textTransform: "none",
+              color: "var(--color-primary)",
+              fontSize: "0.875rem",
+              p: 0,
+              minWidth: "auto",
+              "&:hover": {
+                backgroundColor: "transparent",
+                textDecoration: "underline",
+              },
+            }}
+          >
+            Forgot Password?
+          </Button>
+        </Box>
 
         <Button
           type="submit"
