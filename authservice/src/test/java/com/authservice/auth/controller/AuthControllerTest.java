@@ -27,6 +27,7 @@ import com.authservice.auth.exception.InvalidTokenException;
 import com.authservice.auth.dto.ErrorResponseDTO;
 import com.authservice.auth.dto.SignUpRequestDTO;
 import com.authservice.auth.dto.LoginRequestDTO;
+import com.authservice.auth.dto.PasswordResetDTO;
 import com.authservice.auth.dto.UpdateUserRequestDTO;
 import com.authservice.auth.dto.UserResponseDTO;
 import com.authservice.auth.model.User;
@@ -377,5 +378,114 @@ public class AuthControllerTest {
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("Verification email resent", response.getBody());
+    }
+
+    // Tests for password reset
+    @Test
+    public void sendPasswordResetEmail_whenEmailExists_sendsEmail() {
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+
+        ResponseEntity<?> response = authController.sendPasswordResetEmail(Collections.singletonMap("email", EMAIL));
+
+        verify(userRepository).findByEmail(EMAIL);
+        verify(emailService).sendPasswordResetEmail(user);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Password reset email sent", response.getBody());
+    }
+
+    @Test
+    public void sendPasswordResetEmail_whenEmailDoesNotExist_returnsNotFound() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(null);
+
+        ResponseEntity<?> response = authController.sendPasswordResetEmail(Collections.singletonMap("email", EMAIL));
+
+        verify(userRepository).findByEmail(EMAIL);
+
+        assertEquals(404, response.getStatusCodeValue());
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
+        assertTrue(body.getMessage().contains("User not found"));
+    }
+
+    @Test
+    public void sendPasswordResetEmail_whenRequestTooSoon_ReturnsTooManyRequests() {
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+        user.setPasswordResetEmailSentAt(Instant.now());
+
+        when(userRepository.findByEmail(EMAIL)).thenReturn(user);
+
+        ResponseEntity<?> response = authController.sendPasswordResetEmail(Collections.singletonMap("email", EMAIL));
+        verify(userRepository).findByEmail(EMAIL);
+
+        assertEquals(429, response.getStatusCodeValue());
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
+        assertTrue(body.getMessage().contains("Please wait before requesting another password reset"));
+    }
+
+    @Test
+    public void resetPassword_whenValidRequest_resetsPassword() {
+        final String TOKEN = "valid-token";
+        when(emailService.extractUserIdFromToken(TOKEN)).thenReturn(USER_ID);
+
+        User user = createUser(EMAIL, PASSWORD, FIRST_NAME, LAST_NAME);
+        user.setId(USER_ID);
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+
+        PasswordResetDTO request = new PasswordResetDTO();
+        request.setToken(TOKEN);
+        request.setNewPassword("NewValidPassword123!");
+
+        when(passwordEncoder.encode("NewValidPassword123!"))
+            .thenReturn("NewValidPassword123!");
+
+        ResponseEntity<?> response = authController.resetPassword(request);
+
+        verify(emailService).extractUserIdFromToken(TOKEN);
+        verify(userRepository).findById(USER_ID);
+        verify(userRepository).save(user);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals("Password changed successfully", response.getBody());
+        assertEquals("NewValidPassword123!", user.getPassword());
+    }
+
+    @Test
+    public void resetPassword_whenUserDoesNotExist_returnsNotFound() {
+        final String TOKEN = "valid-token";
+        when(emailService.extractUserIdFromToken(TOKEN)).thenReturn(USER_ID);
+
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
+
+        PasswordResetDTO request = new PasswordResetDTO();
+        request.setToken(TOKEN);
+        request.setNewPassword(PASSWORD);
+
+        ResponseEntity<?> response = authController.resetPassword(request);
+
+        verify(emailService).extractUserIdFromToken(TOKEN);
+        verify(userRepository).findById(USER_ID);
+
+        assertEquals(404, response.getStatusCodeValue());
+        ErrorResponseDTO body = (ErrorResponseDTO) response.getBody();
+        assertTrue(body.getMessage().contains("User not found"));
+    }
+
+    @Test
+    public void resetPassword_whenTokenIsExpired_throwsInvalidTokenException() {
+        String expiredToken = "expired";
+        when(emailService.extractUserIdFromToken(expiredToken))
+            .thenThrow(new InvalidTokenException("Invalid or expired token"));
+
+        PasswordResetDTO request = new PasswordResetDTO();
+        request.setToken(expiredToken);
+        request.setNewPassword(PASSWORD);
+
+        assertThrows(
+            InvalidTokenException.class, 
+            () -> authController.resetPassword(request)
+        );
     }
 }
