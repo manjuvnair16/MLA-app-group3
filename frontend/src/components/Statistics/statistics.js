@@ -50,35 +50,31 @@ const COLOR_HIGH_CONTRAST = "#FF8C00"; // Dark Orange for high contrast elements
 const NEUTRAL_COLOR_LIGHT = "#E0E0E0"; // Light grey for backgrounds/neutral elements
 const COLOR_DURATION = ACCENT_COLOR_PRIMARY; // Use primary for Duration
 
-// CHART_COLORS for a monochromatic palette
+// CHART_COLORS - Expanded vibrant palette for 20+ different activities
 const CHART_COLORS = [
-  ACCENT_COLOR_PRIMARY, // Primary: Deep Blue/Violet
-  COLOR_HIGH_CONTRAST, // High Contrast: Dark Orange
-  ACCENT_COLOR_SECONDARY, // Secondary: Vibrant Pink
-  "#B0E0E6", // Tertiary: Light Powder Blue
-  NEUTRAL_COLOR_LIGHT, // Light Grey
+  "#5B53D0", // 1. Deep Purple (brand color)
+  "#FF6B9D", // 2. Pink
+  "#4ECDC4", // 3. Turquoise
+  "#FF8C42", // 4. Orange
+  "#95E1D3", // 5. Mint
+  "#C44569", // 6. Rose
+  "#F38181", // 7. Coral
+  "#AA96DA", // 8. Lavender
+  "#FCBAD3", // 9. Light Pink
+  "#A8E6CF", // 10. Seafoam
+  "#FFD93D", // 11. Yellow
+  "#6BCF7F", // 12. Green
+  "#4D96FF", // 13. Blue
+  "#FF6B6B", // 14. Red
+  "#A8DADC", // 15. Sky Blue
+  "#E9C46A", // 16. Gold
+  "#2A9D8F", // 17. Teal
+  "#E76F51", // 18. Terracotta
+  "#8E7CC3", // 19. Violet
+  "#90E0EF", // 20. Light Blue
+  "#FFB4A2", // 21. Peach
+  "#B5838D", // 22. Mauve
 ];
-
-// Custom Legend component for the Donut Chart
-const CustomDonutChartLegend = ({ payload }) => {
-  return (
-    <div className="donut-legend-wrapper">
-      {payload.map((entry, index) => {
-        const durationFormatted = toHoursAndMinutes(entry.value);
-        return (
-          <div key={`item-${index}`} className="donut-legend-item">
-            <span
-              className="donut-legend-color-box"
-              style={{ backgroundColor: entry.color }}
-            ></span>
-            <span className="donut-legend-name">{entry.name}</span>
-            <span className="donut-legend-value">{entry.value}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 const Statistics = ({ currentUser }) => {
   const [weeklySummary, setWeeklySummary] = useState({
@@ -266,76 +262,77 @@ const Statistics = ({ currentUser }) => {
             {/* Exercise Distribution (Donut Chart) */}
             <div className="chart-card small-chart">
               <h3>Duration by Exercise Type</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={distributionData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={30}
-                    outerRadius={50}
-                    fill={ACCENT_COLOR_PRIMARY}
-                    // paddingAngle={3}
-                    labelLine={false}
-                    label={({
-                      cx,
-                      cy,
-                      midAngle,
-                      innerRadius,
-                      outerRadius,
-                      value,
-                      percent,
-                      index,
-                    }) => {
-                      // Calculate position for external label (pushed slightly out)
-                      const radius =
-                        innerRadius + (outerRadius - innerRadius) * 0.5;
-                      const x =
-                        cx +
-                        radius * Math.cos(-midAngle * (Math.PI / 180)) * 1.45;
-                      const y =
-                        cy +
-                        radius * Math.sin(-midAngle * (Math.PI / 180)) * 1.45;
+              <div className="donut-chart-container">
+                <div className="donut-chart-wrapper">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={distributionData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius="40%"
+                        outerRadius="70%"
+                        fill={ACCENT_COLOR_PRIMARY}
+                        labelLine={{
+                          stroke: '#8884d8',
+                          strokeWidth: 1
+                        }}
+                        label={({ cx, cy, midAngle, outerRadius, percent }) => {
+                         
+                          if (percent < 0.003) return null;
 
-                      // Return text element for the label
-                      return (
-                        <text
-                          x={x}
-                          y={y}
-                          fill="#333"
-                          textAnchor={x > cx ? "start" : "end"}
-                          dominantBaseline="central"
-                          style={{ fontSize: "12px" }}
-                        >
-                          {`${(percent * 100).toFixed(0)}%`}
-                        </text>
-                      );
-                    }}
-                  >
-                    {distributionData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          const RADIAN = Math.PI / 180;
+                          const radius = outerRadius + 30;
+                          const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                          const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                          return (
+                            <text
+                              x={x}
+                              y={y}
+                              fill="#333"
+                              textAnchor={x > cx ? 'start' : 'end'}
+                              dominantBaseline="central"
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              {`${(percent * 100).toFixed(0)}%`}
+                            </text>
+                          );
+                        }}
+                      >
+                        {distributionData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "transparent" }}
                       />
-                    ))}
-                  </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
 
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "transparent" }} // Prevents dark overlay on hover
-                  />
-
-                  <Legend
-                    content={<CustomDonutChartLegend />}
-                    layout="vertical"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ paddingTop: "10px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+                <div className="donut-legend-wrapper">
+                  {distributionData.map((entry, index) => (
+                    <div key={`item-${index}`} className="donut-legend-item">
+                      <div
+                        className="donut-legend-color-box"
+                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                      />
+                      <span className="donut-legend-name">{entry.name}</span>
+                      <span className="donut-legend-value">{toHoursAndMinutes(entry.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </>

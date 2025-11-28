@@ -246,11 +246,13 @@ def weekly_journal_stats():
     username = request.args.get('user')
     start_date_str = request.args.get('start')
     end_date_str = request.args.get('end')
-
     date_format = "%Y-%m-%d"
+
+    if not all([username, start_date_str, end_date_str]):
+        return jsonify(error="Missing required parameters: user, start, end"), 400
+
     try:
         start_date = datetime.strptime(start_date_str, date_format)
-        # Include the whole end day (up to the start of the next day)
         end_date = datetime.strptime(end_date_str, date_format) + timedelta(days=1)
     except Exception as e:
         logging.error(f"Error parsing dates for weekly journal: {e}")
@@ -491,6 +493,131 @@ def create_activity():
 
     db.exercises.insert_one(doc)
     return jsonify(ok=True)
+
+
+# ============================================================================
+# CUSTOM ACTIVITIES ENDPOINTS
+# ============================================================================ 
+
+@app.route('/api/custom-activities/<username>', methods=['GET'])
+@token_required
+def get_custom_activities(username):
+    """
+    Get all active custom activities for a specific user.
+    Returns: Array of custom activity objects
+    """
+    try:
+        custom_activities = list(db.customActivities.find({
+            "username": username,
+            "isActive": True
+        }).sort("createdAt", 1))  # Sort by creation date, oldest first
+        
+        # Convert ObjectId to string for JSON serialization
+        for activity in custom_activities:
+            activity['_id'] = str(activity['_id'])
+            
+        return jsonify(custom_activities)
+    except Exception as e:
+        logging.error(f"Error fetching custom activities for {username}: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
+
+
+@app.route('/api/custom-activities', methods=['POST'])
+@token_required
+def create_custom_activity():
+    """
+    Create a new custom activity for a user.
+    Request body: { username, activityName }
+    """
+    try:
+        body = request.get_json()
+        username = body.get('username')
+        activity_name = body.get('activityName', '').strip()
+        
+        if not username or not activity_name:
+            return jsonify(error="username and activityName are required"), 400
+        
+        # Validate activity name length
+        if len(activity_name) < 2 or len(activity_name) > 30:
+            return jsonify(error="Activity name must be between 2 and 30 characters"), 400
+        
+        # Check if user has reached the limit (10 custom activities)
+        existing_count = db.customActivities.count_documents({
+            "username": username,
+            "isActive": True
+        })
+        
+        if existing_count >= 10:
+            return jsonify(error="Maximum limit of 10 custom activities reached"), 400
+        
+        # Check for duplicate activity name (case-insensitive) for this user
+        # Check both custom activities and default activity names
+        default_activities = ['Running', 'Cycling', 'Swimming', 'Gym', 'Other']
+        
+        # Check against default activities
+        if activity_name.lower() in [a.lower() for a in default_activities]:
+            return jsonify(error="This activity name already exists as a default activity"), 400
+        
+        # Check against user's custom activities
+        duplicate = db.customActivities.find_one({
+            "username": username,
+            "activityName": {"$regex": f"^{activity_name}$", "$options": "i"},
+            "isActive": True
+        })
+        
+        if duplicate:
+            return jsonify(error="You already have a custom activity with this name"), 400
+        
+        # Create the new custom activity
+        new_activity = {
+            "username": username,
+            "activityName": activity_name,
+            "icon": "custom",  # Default icon identifier
+            "createdAt": datetime.now(timezone.utc),
+            "isActive": True
+        }
+        
+        result = db.customActivities.insert_one(new_activity)
+        new_activity['_id'] = str(result.inserted_id)
+        
+        return jsonify(new_activity), 201
+        
+    except Exception as e:
+        logging.error(f"Error creating custom activity: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
+
+
+@app.route('/api/custom-activities/<activity_id>', methods=['DELETE'])
+@token_required
+def delete_custom_activity(activity_id):
+    """
+    Soft delete a custom activity (set isActive to False).
+    The activity will no longer appear in the user's activity list,
+    but historical exercises using this activity type will still be visible.
+    """
+    try:
+        # Verify the activity exists and belongs to the user making the request
+        try:
+            obj_id = ObjectId(activity_id)
+        except Exception:
+            return jsonify(error="Invalid activity ID format"), 400
+        
+        result = db.customActivities.update_one(
+            {"_id": obj_id},
+            {"$set": {"isActive": False, "deletedAt": datetime.now(timezone.utc)}}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify(error="Custom activity not found"), 404
+        
+        return jsonify(ok=True, message="Custom activity deleted successfully")
+        
+    except Exception as e:
+        logging.error(f"Error deleting custom activity {activity_id}: {e}")
+        traceback.print_exc()
+        return jsonify(error="An internal error occurred"), 500
 
 
 if __name__ == "__main__":

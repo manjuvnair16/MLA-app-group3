@@ -1,0 +1,51 @@
+.modal-description {
+  color: #6c757d;
+  font-size: 0.95em;
+  margin-bottom: 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Override Bootstrap modal styles for better appearance */
+.modal-content {
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #343a40;
+}
+
+/* Form styling within modal */
+.modal-body .form-group {
+  margin-bottom: 1rem;
+}
+
+.modal-body .form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.modal-body .form-control:focus {
+  border-color: #5B53D0;
+  box-shadow: 0 0 0 0.2rem rgba(91, 83, 208, 0.25);
+}
+
+/* Alert styling in modal */
+.modal-body .alert {
+  margin-bottom: 1rem;
+}
