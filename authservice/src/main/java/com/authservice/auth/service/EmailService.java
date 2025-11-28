@@ -53,7 +53,31 @@ public class EmailService {
         }
     }
 
-    public String extractUserIdFromVerificationToken(String token) {
+    public void sendPasswordResetEmail(User user) {
+        String token = jwtService.createPasswordResetToken(user.getId());
+        try {
+            String url = frontendUrl + "/reset-password?token=" + URLEncoder.encode(token, "UTF-8");
+            String name = user.getFirstName();
+            String html = "<p>Hi " + name + ",</p>" 
+                + "<p>We've received a request to reset your password.</p>"
+                + "<p>Please click the link below to create a new password:</p>"
+                + "<a href=\"" + url + "\">Reset password</a>"
+                + "<br/>"
+                + "<p>This link will expire in 24 hours.</p>"
+                + "<p>Didn't ask for a new password? You can safely ignore this email.</p>";
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "utf-8");
+            helper.setTo(user.getEmail());
+            helper.setSubject("MLA Fitness App - Reset your password");
+            helper.setText(html, true);
+            mailSender.send(message);
+        } catch (UnsupportedEncodingException | MessagingException e) {
+            throw new RuntimeException("Failed to send password reset email", e);
+        }
+    }
+
+    public String extractUserIdFromToken(String token) {
         String userId;
         try {
             userId = jwtService.parseToken(token).getSubject();

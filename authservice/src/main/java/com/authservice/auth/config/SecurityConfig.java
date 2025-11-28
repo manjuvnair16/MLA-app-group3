@@ -21,7 +21,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     "/api/auth/login", 
                     "/api/auth/user/**", 
                     "/api/auth/verify", 
-                    "/api/auth/resend-verification").permitAll() // Public endpoints
+                    "/api/auth/resend-verification",
+                    "/api/auth/send-reset-email",
+                    "/api/auth/reset-password").permitAll() // Public endpoints
                 .anyRequest().authenticated() // All other requests need authentication
                 .and()
                 .httpBasic();

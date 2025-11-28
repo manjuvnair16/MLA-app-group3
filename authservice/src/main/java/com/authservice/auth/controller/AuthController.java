@@ -4,6 +4,7 @@ import com.authservice.auth.model.User;
 import com.authservice.auth.dto.AuthResponseDTO;
 import com.authservice.auth.dto.ErrorResponseDTO;
 import com.authservice.auth.dto.LoginRequestDTO;
+import com.authservice.auth.dto.PasswordResetDTO;
 import com.authservice.auth.dto.SignUpRequestDTO;
 import com.authservice.auth.dto.UpdateUserRequestDTO;
 import com.authservice.auth.dto.UserResponseDTO;
@@ -145,7 +146,7 @@ public class AuthController {
 
     @GetMapping("/verify")
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
-        String userId = emailService.extractUserIdFromVerificationToken(token);
+        String userId = emailService.extractUserIdFromToken(token);
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return ResponseEntity.status(404).body(new ErrorResponseDTO("User not found"));
@@ -194,5 +195,53 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok("Verification email resent");
+    }
+
+    @PostMapping("/send-reset-email")
+    public ResponseEntity<?> sendPasswordResetEmail(@RequestBody Map<String, String> request) {
+        String rawEmail = request.get("email");
+        if (rawEmail == null || rawEmail.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email must be provided"));
+        }
+
+        String email = rawEmail.trim().toLowerCase();
+        ValidationUtils.validateEmailAddressConstraints(email);
+
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(404).body(new ErrorResponseDTO("User not found"));
+        }
+
+        Instant lastRequest = user.getPasswordResetEmailSentAt();
+
+        // Limit requests to once every minute
+        if (lastRequest != null && lastRequest.isAfter(now().minusSeconds(60))) {
+            long secondsRemaining = Duration.between(now(), lastRequest.plusSeconds(60)).getSeconds();
+            return ResponseEntity.status(429).body(new ErrorResponseDTO(
+                "Please wait before requesting another password reset (retry in: " 
+                + secondsRemaining + " seconds)"
+            ));
+        }
+
+        emailService.sendPasswordResetEmail(user);
+        user.setPasswordResetEmailSentAt(now());
+        userRepository.save(user);
+        return ResponseEntity.ok("Password reset email sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordResetDTO request) {
+        String token = request.getToken();
+        String userId = emailService.extractUserIdFromToken(token);
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body(new ErrorResponseDTO("User not found"));
+        }
+
+        String newPassword = request.getNewPassword();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Password changed successfully");
     }
 } 

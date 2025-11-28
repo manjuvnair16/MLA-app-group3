@@ -101,19 +101,19 @@ public class EmailServiceTests {
         when(jwtService.parseToken(TOKEN)).thenReturn(jwt);
         when(jwt.getSubject()).thenReturn(userId);
 
-        String extractedUserId = emailService.extractUserIdFromVerificationToken(TOKEN);
+        String extractedUserId = emailService.extractUserIdFromToken(TOKEN);
 
         assertEquals(userId, extractedUserId);
     }
 
     @Test
-    public void extractUserIdFromVerificationToken_invalidToken_throwsInvalidTokenException() {
+    public void extractUserIdFromToken_invalidToken_throwsInvalidTokenException() {
         String token = "invalid-token";
 
         when(jwtService.parseToken(token)).thenThrow(new RuntimeException("Token parsing error"));
 
         assertThrows(InvalidTokenException.class, () -> {
-            emailService.extractUserIdFromVerificationToken(token);
+            emailService.extractUserIdFromToken(token);
         });
     }
 }

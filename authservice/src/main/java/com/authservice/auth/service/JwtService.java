@@ -41,6 +41,10 @@ public class JwtService {
         return buildToken(username, ONE_DAY, "email");
     }
 
+    public String createPasswordResetToken(String username) {
+        return buildToken(username, ONE_DAY, "password-reset");
+    }
+
     public Claims parseToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())

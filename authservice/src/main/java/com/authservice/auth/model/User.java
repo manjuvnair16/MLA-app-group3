@@ -16,6 +16,7 @@ public class User {
     private String password;
     private boolean verified = false;
     private Instant verificationEmailSentAt;
+    private Instant passwordResetEmailSentAt;
 
     public User() {
     }
@@ -82,5 +83,13 @@ public class User {
 
     public void setVerificationEmailSentAt(Instant verificationEmailSentAt) {
         this.verificationEmailSentAt = verificationEmailSentAt;
+    }
+
+    public Instant getPasswordResetEmailSentAt() {
+        return passwordResetEmailSentAt;
+    }
+
+    public void setPasswordResetEmailSentAt(Instant passwordResetEmailSentAt) {
+        this.passwordResetEmailSentAt = passwordResetEmailSentAt;
     }
 }
