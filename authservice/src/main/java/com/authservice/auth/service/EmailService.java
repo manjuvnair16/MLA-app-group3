@@ -56,7 +56,7 @@ public class EmailService {
     public void sendPasswordResetEmail(User user) {
         String token = jwtService.createPasswordResetToken(user.getId());
         try {
-            String url = frontendUrl + "/password-reset?token=" + URLEncoder.encode(token, "UTF-8");
+            String url = frontendUrl + "/reset-password?token=" + URLEncoder.encode(token, "UTF-8");
             String name = user.getFirstName();
             String html = "<p>Hi " + name + ",</p>" 
                 + "<p>We've received a request to reset your password.</p>"

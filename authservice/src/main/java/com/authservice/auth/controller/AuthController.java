@@ -212,7 +212,20 @@ public class AuthController {
             return ResponseEntity.status(404).body(new ErrorResponseDTO("User not found"));
         }
 
+        Instant lastRequest = user.getPasswordResetEmailSentAt();
+
+        // Limit requests to once every minute
+        if (lastRequest != null && lastRequest.isAfter(now().minusSeconds(60))) {
+            long secondsRemaining = Duration.between(now(), lastRequest.plusSeconds(60)).getSeconds();
+            return ResponseEntity.status(429).body(new ErrorResponseDTO(
+                "Please wait before requesting another password reset (retry in: " 
+                + secondsRemaining + " seconds)"
+            ));
+        }
+
         emailService.sendPasswordResetEmail(user);
+        user.setPasswordResetEmailSentAt(now());
+        userRepository.save(user);
         return ResponseEntity.ok("Password reset email sent");
     }
 
