@@ -6,8 +6,8 @@ const exerciseSchema = new Schema(
     username: { type: String, required: true },
     exerciseType: {
       type: String,
-      required: true,
-      enum: ['Running', 'Cycling', 'Swimming', 'Gym', 'Other']
+      required: true
+      // REMOVED ENUM - allow any activity type
     },
     description: { type: String, required: false },
     duration: { 

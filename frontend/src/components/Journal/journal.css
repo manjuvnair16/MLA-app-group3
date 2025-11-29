@@ -189,12 +189,14 @@
 }
 
 .card-date {
-  font-size: 0.875rem;
-  /* 14px */
-  font-weight: 500;
-  color: var(--color-text-light);
-  flex-shrink: 0;
-  margin-left: 1rem;
+  font-size: 0.8125rem;
+  margin-left: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  white-space: normal !important;
+  line-height: 1.4;
 }
 
 .card-body {

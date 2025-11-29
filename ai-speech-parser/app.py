@@ -29,7 +29,21 @@ groq = ChatGroq(api_key=groq_api,
 
 # Define output schema
 schemas = [
-    ResponseSchema(name="exerciseType", description="The type of activity from the list ['Running', 'Cycling', 'Swimming', 'Gym', 'Other']. If the activity is not one of the first four (for example 'Yoga', 'Walking', 'Football', 'Stretching', 'Pilates', 'Cricket', 'Sports', etc.), return 'Other'"),
+    ResponseSchema(name="exerciseType", description="""Extract the exercise/activity type from the user's input. 
+        Return the EXACT activity name mentioned by the user (e.g., 'Basketball', 'Yoga', 'Rock Climbing', 'Dance', etc.).
+        
+        Common activities include but are not limited to:
+        - Running, Cycling, Swimming, Gym, Dance, Yoga
+        - Stretching, Pilates, Rock Climbing, Skating, Boxing
+        - Basketball, Football, Cricket, Tennis, Badminton
+        - Walking, Hiking, Rowing, Wheelchair Run Pace
+        - Or ANY other physical activity mentioned
+        
+        **Important**: 
+        - Capitalize the first letter of each word (e.g., 'basketball' → 'Basketball', 'rock climbing' → 'Rock Climbing')
+        - Return the SPECIFIC activity name, NOT 'Other'
+        - If the activity type is unclear or not mentioned, return 'Unknown'
+        """),
     ResponseSchema(name="duration", description="The time spent on the exercise in **minutes**, extracted as a **plain integer**. For '30mins running', the value should be **30**. Do not include units like 'minutes' or 'hrs'. For duration like 4mins 10seconds five hours, the value should be converted to minutes, **304.16**."),
    # ResponseSchema(name="distance", description="Distance covered, e.g., 5 km"),
    # ResponseSchema(name="intensity", description="Low, medium, high"),
@@ -43,7 +57,13 @@ parser = StructuredOutputParser(response_schemas=schemas)
 
 prompt_template = ChatPromptTemplate.from_template("""
 You are an expert workout data extraction tool. **Analyze the following text and only extract structured workout data in JSON format.**
-**If the text does not contain any recognizable workout or exercise information, you MUST return an empty JSON object, i.e., {{}}**.
+
+**IMPORTANT RULES:**
+1. Extract the EXACT activity name mentioned by the user (e.g., "Basketball", "Yoga", "Rock Climbing")
+2. DO NOT categorize activities as "Other" - always return the specific activity name
+3. Capitalize properly (e.g., "basketball" → "Basketball", "rock climbing" → "Rock Climbing")
+4. If the text does not contain any recognizable workout or exercise information, you MUST return an empty JSON object: {{}}
+
 
 Extract structured workout data in JSON from this text:
 {input_text}
@@ -57,8 +77,15 @@ def parse_activity(transcript: str, today_date: str = None):
     )
 
     response = groq.invoke(prompt)
-    return parser.parse(response.content)
+    parsed = parser.parse(response.content)
 
+    # Post-processing: Ensure activity name is properly capitalized
+    if parsed.get("exerciseType"):
+        activity = parsed["exerciseType"]
+        # Capitalize each word properly
+        parsed["exerciseType"] = ' '.join(word.capitalize() for word in activity.split())
+        
+    return parsed
 
 # specify the routes
 @app.route('/')
@@ -84,6 +111,8 @@ def speech_to_text_parser_route():
         today_dt = datetime.now().strftime("%Y/%m/%d")
         # Define prompt template
         parsed_data = parse_activity(transcript, today_dt)
+        # Debug logging
+        print(f"Parsed activity: {parsed_data.get('exerciseType')}")
         return jsonify({"parsed": parsed_data}), 200
     except Exception as e:
         print("Error parsing activity:", str(e))

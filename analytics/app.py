@@ -246,11 +246,13 @@ def weekly_journal_stats():
     username = request.args.get('user')
     start_date_str = request.args.get('start')
     end_date_str = request.args.get('end')
-
     date_format = "%Y-%m-%d"
+
+    if not all([username, start_date_str, end_date_str]):
+        return jsonify(error="Missing required parameters: user, start, end"), 400
+
     try:
         start_date = datetime.strptime(start_date_str, date_format)
-        # Include the whole end day (up to the start of the next day)
         end_date = datetime.strptime(end_date_str, date_format) + timedelta(days=1)
     except Exception as e:
         logging.error(f"Error parsing dates for weekly journal: {e}")
