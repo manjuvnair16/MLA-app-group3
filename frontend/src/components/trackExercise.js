@@ -444,6 +444,7 @@ const TrackExercise = ({ currentUser }) => {
               <DatePicker
                 value={state.date}
                 onChange={(date) => setState({ ...state, date })}
+                maxDate={new Date()}
                 renderInput={(params) => <Form.Control {...params} />}
                 inputFormat="dd/MM/yyyy"
               />
