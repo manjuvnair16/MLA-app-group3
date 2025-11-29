@@ -187,11 +187,10 @@
 }
 
 /* ============================================================================
-   RESPONSIVE ADJUSTMENTS - UPDATED FOR MOBILE READABILITY
+   RESPONSIVE ADJUSTMENTS FOR READABILITY
    ============================================================================ */
 
 @media (max-width: 900px) {
-  /* CRITICAL: Make dropdown text readable on mobile */
   .activity-dropdown {
     font-size: 20px !important;
     padding: 12px 16px !important;
@@ -288,7 +287,3 @@
     transform: none;
   }
 }
-
-/* ============================================================================
-   END OF DROPDOWN STYLING
-   ============================================================================ */
