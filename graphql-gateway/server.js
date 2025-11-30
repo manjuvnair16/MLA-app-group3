@@ -344,7 +344,12 @@ async function start() {
     // Configure GraphQL endpoint with rate limiting
     app.use("/graphql",
       graphqlRateLimit, // Apply rate limiting first
-      cors({ origin: config.corsOrigins, credentials: true }),
+      cors({ 
+            origin: config.corsOrigins, 
+            credentials: true,
+            allowedHeaders: ["Content-Type", "Authorization"],
+            optionsSuccessStatus: 200
+          }),
       bodyParser.json(),
       expressMiddleware(server, {
         context: async ({ req }) => {

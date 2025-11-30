@@ -77,6 +77,22 @@ const analyticsQueryResolvers = {
       handleServiceError(error, 'fetch weekly stats');
       return []; // Return empty array instead of null
     }
+
+  },
+
+
+  /**
+   * Get daily trend statistics for a user within date range
+   */
+  dailyTrend: async (_, { username }, context) => {
+    try {
+      return await retryWithFallback(async () => {
+        return await analyticsService.getDailyTrend(username, context);
+      });
+    } catch (error) {
+      handleServiceError(error, 'fetch daily trend stats');
+      return []; // Return empty array instead of null
+    }
   }
 };
 

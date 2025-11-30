@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import "./statistics.css";
 import {
   LineChart,
@@ -88,36 +87,100 @@ const Statistics = ({ currentUser }) => {
   useEffect(() => {
     setLoading(true);
 
-    // Use REST API endpoints that were working before
-    const summaryUrl = `http://localhost:5050/stats/weekly_summary/${encodeURIComponent(
-      currentUser
-    )}`;
-    const trendUrl = `http://localhost:5050/stats/daily_trend/${encodeURIComponent(
-      currentUser
-    )}`;
     const jwt = localStorage.getItem("jwt");
     const headers = jwt ? { Authorization: `Bearer ${jwt}` } : {};
 
-    // Load both endpoints and set state
-    Promise.all([
-      axios.get(summaryUrl, { headers }),
-      axios.get(trendUrl, { headers }),
-    ])
-      .then(([summaryRes, trendRes]) => {
+    // get the start and end date for weekly stats (fetch last 7 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 6);
+
+    const formattedStart = startDate.toISOString().split('T')[0];
+    const formattedEnd = endDate.toISOString().split('T')[0];
+    console.log('Fetching stats for:', formattedStart, 'to', formattedEnd);
+
+    const query = `query WeeklyStats($username: String!, $startDate: String!, $endDate: String!) {
+                        analytics {
+                          weeklyStats(username: $username, startDate: $startDate, endDate: $endDate) {
+                            exerciseType
+                            totalDuration
+                          }
+                        }
+                      }`;
+
+        fetch('http://localhost:4000/graphql', {
+              method: 'POST',
+              headers:{
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwt}`,
+                      },
+              body: JSON.stringify({
+                query,
+                variables: {
+                  username: currentUser,
+                  startDate: formattedStart,
+                  endDate: formattedEnd
+                }
+              })
+          })
+        .then(res => res.json()) 
+        .then(result => {const stats = result.data?.analytics?.weeklyStats || [];
+        console.log('Fetched weekly trend stats:', stats);
+        
+        // Derive same frontend state shape
+        const totalDuration = stats.reduce((sum, item) => sum + item.totalDuration, 0);
+        const exercises = stats.map(item => ({
+          exerciseType: item.exerciseType,
+          totalDuration: item.totalDuration
+        }));
+
+  
         setWeeklySummary({
-          totalDuration: summaryRes.data?.totalDuration || 0,
-          totalTypes: summaryRes.data?.totalTypes || 0,
-          exercises: summaryRes.data?.exercises || [],
+          totalDuration,
+          totalTypes: exercises.length,
+          exercises
         });
 
+        const query_daily_trend = `
+        query DailyTrend($username: String!) {
+          analytics {
+            dailyTrend(username: $username) {
+              name
+              Duration
+              date
+            }
+          }
+        }
+      `;
+      fetch('http://localhost:4000/graphql', {
+              method: 'POST',
+              headers:{
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwt}`,
+                      },
+              body: JSON.stringify({
+                query: query_daily_trend,
+                variables: {
+                  username: currentUser
+                }
+              })
+          })
+        .then(res => res.json()) 
+        .then(result => {const stats_trend = result.data?.analytics?.dailyTrend  || [];
+
         // Ensure the trend array is in the shape the chart expects
-        const trend = Array.isArray(trendRes.data?.trend)
-          ? trendRes.data.trend
-          : [];
+        // const trend = exercises.map((ex, i) => ({ name: ex.exerciseType, Duration: ex.totalDuration }));
+       console.log('Fetched daily trend stats:', stats_trend);
+       const trend = stats_trend.map(item => ({
+          name: item.name,
+          Duration: item.Duration
+         // date: item.date || ""
+        }));
         setWeeklyData(trend);
       })
+  })
       .catch((err) => {
-        console.error("Failed to load statistics", err);
+        console.error('GraphQL stats fetch failed:', err);
         setWeeklySummary({ totalDuration: 0, totalTypes: 0, exercises: [] });
         setWeeklyData([]);
       })

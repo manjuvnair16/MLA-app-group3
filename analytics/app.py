@@ -300,7 +300,8 @@ def get_start_of_week():
     # Python's weekday() returns 0 for Monday, 6 for Sunday
     start_of_week = today - timedelta(days=today.weekday())
     return start_of_week
-    
+
+'''
 # Provides Total Duration and Distribution for the CURRENT WEEK
 @app.route('/stats/weekly_summary/<username>', methods=['GET'])
 @token_required
@@ -352,6 +353,8 @@ def weekly_summary_stats(username):
         logging.error(f"An error occurred while querying MongoDB for weekly summary: {e}")
         traceback.print_exc()
         return jsonify(error="An internal error occurred"), 500
+'''
+
 
 @app.route('/api/activities/range', methods=['GET'])
 @token_required

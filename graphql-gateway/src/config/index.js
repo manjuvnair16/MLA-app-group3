@@ -2,7 +2,7 @@ export const config = {
   port: process.env.PORT || 4000,
   activityUrl: process.env.ACTIVITY_URL || "http://activity-tracking:5300",
   analyticsUrl: process.env.ANALYTICS_URL || "http://analytics:5050",
-  corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000").split(","),
+  corsOrigins: (process.env.CORS_ORIGINS || "http://localhost").split(","),
   nodeEnv: process.env.NODE_ENV || "development",
   
   // Timeout configurations

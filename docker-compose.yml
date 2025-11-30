@@ -108,7 +108,7 @@ services:
       - NODE_ENV=production
       - ACTIVITY_URL=http://activity-tracking:5300
       - ANALYTICS_URL=http://analytics:5050
-      - CORS_ORIGINS=http://localhost:3000
+      - CORS_ORIGINS=http://localhost,http://localhost:3000,http://127.0.0.1:3000
     env_file:
       - ./graphql-gateway/.env
     ports:
