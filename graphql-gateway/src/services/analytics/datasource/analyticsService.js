@@ -36,6 +36,19 @@ export class AnalyticsService {
     return data.stats || [];
   }
 
+
+  async getDailyTrend(username, context) {
+    const { data } = await axios.get(`${this.baseURL}/stats/daily_trend/${username}`, {
+      params: {
+        user: username
+      },
+      headers: { Authorization: context.authHeader },
+      timeout: 5000
+    });
+    return data.trend || [];
+  }
+  
+
   async healthCheck() {
     try {
       await axios.get(`${this.baseURL}/health`, { timeout: 3000 });

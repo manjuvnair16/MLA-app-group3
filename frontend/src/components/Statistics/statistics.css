@@ -51,7 +51,6 @@
     margin-top: 0;
     font-size: 1em;
     font-weight: 400;
-    /* Ensure header text is visible on all card types */
     color: inherit;
     opacity: 0.9;
     margin-bottom: 10px; 
@@ -63,27 +62,24 @@
     margin: 0; 
     line-height: 1.1; 
     color: inherit;
-
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 140px; /* keeps cards even and avoids crowding */
+    min-height: 140px;
 }
 
 /* Base style applied to all three metric cards */
 .primary-bg,
 .secondary-bg,
 .accent-bg { 
-    background-color: var(--color-card-bg); /* White background for all */
-    
+    background-color: var(--color-card-bg);
     color: var(--color-text-dark); 
 }
 
-
 .stat-card h3 {
     color: var(--color-text-dark);
-    font-weight: 400; /* Lighter weight for the title */
+    font-weight: 400;
     opacity: 0.9;
     margin-bottom: 10px; 
     margin-top: 0; 
@@ -92,7 +88,7 @@
 
 .stat-card p {
     color: var(--color-primary-accent);
-    font-weight: 700; /* Bold weight for the number */
+    font-weight: 700;
     font-size: 3.0em; 
     line-height: 1.1; 
     margin: 0;
@@ -102,11 +98,10 @@
     border: 1px solid var(--color-neutral-bg); 
 }
 
-
 /* Charts Grid Layout */
 .charts-grid {
     display: grid;
-    grid-template-columns: 2fr 1.5fr; /* More space for the donut chart side */
+    grid-template-columns: 2fr 1.5fr;
     gap: 20px;
 }
 
@@ -139,40 +134,92 @@
     flex-direction: column;
 }
 
-/* Styles for the Custom Donut Chart Legend */
-.donut-legend-wrapper {
+/* Donut Chart Container with Flex Layout */
+.donut-chart-container {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-    align-items: flex-start;
-    padding-left: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.donut-chart-wrapper {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 300px;
+}
+
+/* Grid Layout for Legend */
+.donut-legend-wrapper {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px 16px;
+    margin-top: 0;
+    padding-left: 0;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* Custom scrollbar for legend */
+.donut-legend-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.donut-legend-wrapper::-webkit-scrollbar-track {
+    background: var(--color-neutral-bg);
+    border-radius: 3px;
+}
+
+.donut-legend-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-primary-accent);
+    border-radius: 3px;
+}
+
+.donut-legend-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #4a43b0;
 }
 
 .donut-legend-item {
     display: flex;
     align-items: center;
-    font-size: 0.95em;
+    font-size: 0.9em;
     color: var(--color-text-dark);
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.donut-legend-item:hover {
+    background-color: var(--color-neutral-bg);
 }
 
 .donut-legend-color-box {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
     margin-right: 8px;
     flex-shrink: 0;
-    border: 1px solid var(--color-neutral-bg);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .donut-legend-name {
-    margin-right: 5px;
+    margin-right: 6px;
     font-weight: 500;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .donut-legend-value {
     color: var(--color-text-muted);
     font-size: 0.85em;
+    font-weight: 600;
+    flex-shrink: 0;
 }
 
 /* Styles for the Custom Donut Chart Tooltip */
@@ -196,11 +243,11 @@
     font-size: 0.9em;
 }
 
-
 .chart-legend {
   display: flex;
   gap: 16px;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .legend-chip {
@@ -222,19 +269,156 @@
   border-radius: 4px;
 }
 
-/* Responsive Adjustments for Mobile */
+/* ============================================================
+                        RESPONSIVE DESIGN                        
+============================================================ */
+
+/* Tablet and small desktop (900px and below) */
 @media (max-width: 900px) {
+    .stats-container {
+        padding: 20px;
+        margin: 20px 10px;
+    }
+    
+    .stats-container h2 {
+        font-size: 1.5em;
+        margin-bottom: 25px;
+    }
+    
     .stats-header-cards {
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 30px;
     }
+    
     .stat-card {
-        flex: 1 1 100%; /* Stack summary cards on mobile */
+        width: 100%;
+        min-width: unset;
+        padding: 20px;
     }
+    
+    .stat-card h3 {
+        font-size: 0.95em;
+    }
+    
+    .stat-card p {
+        font-size: 2.2em;
+        min-height: 80px;
+    }
+    
     .charts-grid {
-        grid-template-columns: 1fr; /* Stack charts vertically on smaller screens */
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
+    
     .wide-chart, .small-chart {
         grid-column: span 1;
+        min-height: unset;
+    }
+    
+    .chart-card {
+        padding: 20px;
+        overflow: hidden;
+    }
+    
+    .chart-card h3 {
+        font-size: 1.15em;
+        margin-bottom: 15px;
+    }
+    
+    /* Fix line chart overflow */
+    .wide-chart .recharts-wrapper {
+        margin: 0 -10px;
+    }
+    
+    /* Stack donut chart and legend vertically */
+    .donut-chart-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+    }
+    
+    .donut-chart-wrapper {
+        width: 100%;
+        min-width: unset;
+        max-width: 100%;
+        display: flex;
+        justify-content: center;
+        overflow: visible;
+        padding: 0 10px;
+    }
+    
+    /* Single column legend on mobile */
+    .donut-legend-wrapper {
+        grid-template-columns: 1fr;
+        max-height: none;
+        width: 100%;
+        gap: 10px;
+        overflow-y: visible;
+        padding: 0;
+    }
+    
+    .donut-legend-item {
+        font-size: 0.9em;
+        padding: 10px 12px;
+        border: 1px solid var(--color-neutral-bg);
+    }
+    
+    .donut-legend-color-box {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .donut-legend-name {
+        white-space: normal;
+        word-break: break-word;
     }
 }
 
+/* Extra adjustments for very small screens */
+@media (max-width: 450px) {
+    .stats-container {
+        padding: 15px;
+        margin: 15px 5px;
+        border-radius: 8px;
+    }
+    
+    .stats-container h2 {
+        font-size: 1.3em;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        padding: 18px 15px;
+    }
+    
+    .stat-card h3 {
+        font-size: 0.9em;
+    }
+    
+    .stat-card p {
+        font-size: 2em;
+        min-height: 70px;
+    }
+    
+    .chart-card {
+        padding: 15px;
+    }
+    
+    .chart-card h3 {
+        font-size: 1.05em;
+        margin-bottom: 12px;
+        padding-left: 8px;
+        border-left-width: 3px;
+    }
+    
+    .donut-legend-item {
+        font-size: 0.85em;
+        padding: 8px 10px;
+    }
+    
+    .donut-legend-color-box {
+        width: 12px;
+        height: 12px;
+    }
+}

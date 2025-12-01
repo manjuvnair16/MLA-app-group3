@@ -246,11 +246,13 @@ def weekly_journal_stats():
     username = request.args.get('user')
     start_date_str = request.args.get('start')
     end_date_str = request.args.get('end')
-
     date_format = "%Y-%m-%d"
+
+    if not all([username, start_date_str, end_date_str]):
+        return jsonify(error="Missing required parameters: user, start, end"), 400
+
     try:
         start_date = datetime.strptime(start_date_str, date_format)
-        # Include the whole end day (up to the start of the next day)
         end_date = datetime.strptime(end_date_str, date_format) + timedelta(days=1)
     except Exception as e:
         logging.error(f"Error parsing dates for weekly journal: {e}")
@@ -298,7 +300,8 @@ def get_start_of_week():
     # Python's weekday() returns 0 for Monday, 6 for Sunday
     start_of_week = today - timedelta(days=today.weekday())
     return start_of_week
-    
+
+'''
 # Provides Total Duration and Distribution for the CURRENT WEEK
 @app.route('/stats/weekly_summary/<username>', methods=['GET'])
 @token_required
@@ -350,6 +353,8 @@ def weekly_summary_stats(username):
         logging.error(f"An error occurred while querying MongoDB for weekly summary: {e}")
         traceback.print_exc()
         return jsonify(error="An internal error occurred"), 500
+'''
+
 
 @app.route('/api/activities/range', methods=['GET'])
 @token_required

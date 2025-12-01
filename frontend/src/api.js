@@ -24,3 +24,6 @@ api.interceptors.request.use((config) => {
 });
 
 export const trackExercise = (payload) => api.post(`/exercises/add`, payload);
+export const getCustomActivities = (username) => api.get(`/exercises/custom-activities/${username}`);
+export const createCustomActivity = (payload) => api.post(`/exercises/custom-activities`, payload);
+export const deleteCustomActivity = (activityId) => api.delete(`/exercises/custom-activities/${activityId}`);

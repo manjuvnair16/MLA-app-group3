@@ -1,0 +1,289 @@
+/* ============================================================================
+   DROPDOWN ACTIVITY SELECTOR STYLING
+   ============================================================================ */
+
+/* Activity Selector Label with Icon */
+.activity-selector-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.activity-selector-label .activity-label-icon {
+  font-size: 1.25rem;
+  color: #5B53D0;
+}
+
+/* Activity Dropdown - Light & Clean Design */
+.activity-dropdown {
+  font-size: 1rem;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e0e7ff;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background-color: #f8f9ff;
+  color: #2c3e50;
+  cursor: pointer;
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B53D0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.25rem;
+  padding-right: 3rem;
+}
+
+.activity-dropdown:hover {
+  border-color: #5B53D0;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(91, 83, 208, 0.15);
+  transform: translateY(-2px);
+}
+
+.activity-dropdown:focus {
+  border-color: #5B53D0;
+  box-shadow: 0 0 0 4px rgba(91, 83, 208, 0.1);
+  outline: none;
+  background-color: #ffffff;
+}
+
+/* Placeholder styling */
+.activity-dropdown option[value=""] {
+  color: #9ca3af;
+}
+
+/* Option groups styling */
+.activity-dropdown optgroup {
+  font-weight: 700;
+  font-style: normal;
+  color: #5B53D0;
+  background-color: #f8f9ff;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.activity-dropdown option {
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  background-color: #ffffff;
+  font-weight: 500;
+}
+
+.activity-dropdown option:hover {
+  background-color: #f8f9ff;
+}
+
+/* Selected activity badge */
+.selected-activity-badge {
+  margin-left: 12px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #5B53D0 0%, #7b73e0 100%);
+  color: white;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  vertical-align: middle;
+  display: inline-block;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 2px 8px rgba(91, 83, 208, 0.3);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Activity actions container */
+.activity-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+/* Add custom activity button - Improved */
+.add-custom-btn {
+  border: 2px dashed #a5b4fc;
+  color: #5B53D0;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background-color: #f8f9ff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-custom-btn:hover {
+  border-color: #5B53D0;
+  border-style: solid;
+  color: #5B53D0;
+  background-color: #e0e7ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(91, 83, 208, 0.2);
+}
+
+.add-custom-btn:focus {
+  border-color: #5B53D0;
+  border-style: solid;
+  color: #5B53D0;
+  box-shadow: 0 0 0 4px rgba(91, 83, 208, 0.1);
+}
+
+.add-custom-btn:active {
+  transform: translateY(0);
+}
+
+/* Custom activities count badge */
+.custom-count-badge {
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #5B53D0;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 2px solid #a5b4fc;
+}
+
+/* Form section spacing */
+.form-section {
+  margin-bottom: 1.75rem;
+}
+
+.form-section label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+/* Success message */
+.success-message {
+  margin-top: 1rem;
+  padding: 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+  border: 2px solid #c3e6cb;
+  text-align: center;
+  font-weight: 600;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 2px 8px rgba(21, 87, 36, 0.1);
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS FOR READABILITY
+   ============================================================================ */
+
+@media (max-width: 900px) {
+  .activity-dropdown {
+    font-size: 20px !important;
+    padding: 12px 16px !important;
+    padding-right: 3rem !important;
+    min-height: 44px;
+  }
+  
+  .activity-dropdown option {
+    font-size: 20px !important;
+    padding: 12px 16px !important;
+    min-height: 44px;
+  }
+  
+  .activity-dropdown optgroup {
+    font-size: 20px !important;
+    padding: 8px 0;
+  }
+  
+  .selected-activity-badge {
+    display: block;
+    margin-left: 0;
+    margin-top: 12px;
+    text-align: center;
+    font-size: 20px;
+    padding: 10px 18px;
+  }
+  
+  .activity-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .add-custom-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+  
+  .custom-count-badge {
+    text-align: center;
+    display: block;
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+  
+  .activity-selector-label {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 450px) {
+  .activity-dropdown {
+    font-size: 20px !important;
+  }
+  
+  .activity-dropdown option {
+    font-size: 20px !important;
+    padding: 14px 18px !important;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .activity-dropdown {
+    border-width: 3px;
+  }
+  
+  .activity-dropdown:focus {
+    outline: 3px solid #5B53D0;
+    outline-offset: 2px;
+  }
+  
+  .add-custom-btn {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .selected-activity-badge,
+  .success-message {
+    animation: none;
+  }
+  
+  .add-custom-btn:hover,
+  .activity-dropdown:hover {
+    transform: none;
+  }
+}

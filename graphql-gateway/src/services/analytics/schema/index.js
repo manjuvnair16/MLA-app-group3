@@ -14,6 +14,12 @@ export const analyticsTypeDefs = `#graphql
     totalDuration: Int!
   }
 
+  type DailyTrend {
+    name: String!
+    Duration: Int!
+    date: String!
+  }
+
   type AnalyticsQuery {
     # Get all user statistics
     allStats: [UserStats!]!
@@ -23,6 +29,9 @@ export const analyticsTypeDefs = `#graphql
     
     # Get weekly statistics for a user within date range
     weeklyStats(username: String!, startDate: String!, endDate: String!): [WeeklyStats!]!
+
+    # Get daily trend data (for line chart)
+    dailyTrend(username: String!): [DailyTrend!]!
   }
 
   extend type Query {
