@@ -18,13 +18,15 @@ import Journal from "./components/Journal/journal.js";
 import Settings from "./components/Settings/settings.js";
 import Verify from "./components/Verify/verify.js";
 import logo from "./img/CFG_logo.png";
-import { ChatbotProvider } from './contexts/chatbotContext.js';
-import ChatbotOverlay from './components/ChatBot/ChatbotOverlay.js';
+import { ChatbotProvider } from "./contexts/chatbotContext.js";
+import ChatbotOverlay from "./components/ChatBot/ChatbotOverlay.js";
+import ForgotPassword from "./components/ForgottenPassword/forgottenPassword.js";
+import ResetPassword from "./components/ResetPassword/resetPassword.js";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
-  
+
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentUser("");
@@ -58,8 +60,8 @@ function App() {
               <div className="hero-content">
                 <h2>Track. Improve. Stay Consistent.</h2>
                 <p>
-                  Log workouts in seconds and watch your progress grow with clear,
-                  motivating insights.
+                  Log workouts in seconds and watch your progress grow with
+                  clear, motivating insights.
                 </p>
               </div>
               <div className="hero-visual" aria-hidden="true">
@@ -103,13 +105,7 @@ function App() {
               />
               <Route
                 path="/signup"
-                element={
-                  isLoggedIn ? (
-                    <Navigate to="/" />
-                  ) : (
-                    <Signup />
-                  )
-                }
+                element={isLoggedIn ? <Navigate to="/" /> : <Signup />}
               />
               <Route
                 path="/trackExercise"
@@ -151,25 +147,24 @@ function App() {
                   )
                 }
               />
-              <Route 
-                path="/verify" 
-                element={<Verify />} 
-              />
+              <Route path="/verify" element={<Verify />} />
               <Route
                 path="/"
                 element={
-                  isLoggedIn ? ( 
+                  isLoggedIn ? (
                     <Navigate to="/trackExercise" />
                   ) : (
                     <Navigate to="/login" />
                   )
                 }
               />
+              <Route path="/forgotten-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
             </Routes>
           </div>
 
           {isLoggedIn && <ChatbotOverlay currentUser={currentUser} />}
-          
+
           <Footer />
         </Router>
       </div>

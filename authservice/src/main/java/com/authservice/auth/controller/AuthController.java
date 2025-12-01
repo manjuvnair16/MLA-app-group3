@@ -94,6 +94,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequestDTO request) {
+    try {
         if (request.getEmail() != null && !request.getEmail().isEmpty()) {
             // Normalise and validate email
             String email = request.getEmail().trim().toLowerCase();
@@ -108,16 +109,23 @@ public class AuthController {
             user.setFirstName(request.getFirstName());
             user.setLastName(request.getLastName());
             userRepository.save(user);
+                        
+            try {
+                emailService.sendVerificationEmail(user);
+                user.setVerificationEmailSentAt(now());
+                userRepository.save(user);
+            } catch (Exception e) {
+            }
             
-            emailService.sendVerificationEmail(user);
-            user.setVerificationEmailSentAt(now());
-            userRepository.save(user);
             AuthResponseDTO response = new AuthResponseDTO("User registered successfully! Please check your email to verify your account before logging in.");
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(new ErrorResponseDTO("Email must be provided"));
         }
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body(new ErrorResponseDTO("An error occurred during registration: " + e.getMessage()));
     }
+}
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequestDTO request) {
@@ -245,3 +253,4 @@ public class AuthController {
         return ResponseEntity.ok("Password changed successfully");
     }
 } 
+

@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   frontend:
     build:
@@ -16,7 +16,7 @@ services:
     environment:
       - NODE_ENV=development
     env_file:
-    - ./activity-tracking/.env 
+      - ./activity-tracking/.env
     ports:
       - "5300:5300"
     depends_on:
@@ -61,7 +61,6 @@ services:
       - ./analytics:/app
     restart: unless-stopped
 
-
   authservice:
     build:
       context: ./authservice
@@ -90,7 +89,7 @@ services:
       - app-network
 
   ai-speech-parser:
-    build: 
+    build:
       context: ./ai-speech-parser
       dockerfile: Dockerfile
     ports:
@@ -153,16 +152,22 @@ services:
       - /:/rootfs:ro # Mount root filesystem for disk stats
     command:
       # Tell Node Exporter where to find the host's filesystems
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/host'
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/host"
     restart: unless-stopped
     ports:
       - "9100:9100"
     networks:
       - app-network
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
+    networks:
+      - app-network
 
- 
 networks:
   app-network:
     driver: bridge
@@ -170,4 +175,3 @@ networks:
 volumes:
   mongodbdata:
   grafana_data:
-

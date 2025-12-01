@@ -17,13 +17,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .cors().and() // Enable CORS (configure this based on your requirements)
                 .csrf().disable() // Disable CSRF (enable and configure this in production)
                 .authorizeRequests()
-                .antMatchers("/api/auth/signup", 
-                    "/api/auth/login", 
-                    "/api/auth/user/**", 
-                    "/api/auth/verify", 
-                    "/api/auth/resend-verification",
-                    "/api/auth/send-reset-email",
-                    "/api/auth/reset-password").permitAll() // Public endpoints
+                .antMatchers("/api/auth/**").permitAll() // Public endpoints
                 .anyRequest().authenticated() // All other requests need authentication
                 .and()
                 .httpBasic();
