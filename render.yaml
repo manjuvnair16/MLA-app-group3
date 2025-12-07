@@ -2,7 +2,7 @@
 
 # The region for all services in this Blueprint
 # Must match for private network communication.
-region: us-east
+
 
 # --- DATABASE / CORE INFRASTRUCTURE SERVICES ---
 # These services are internal (pserv) and require a persistent disk for data.
@@ -10,8 +10,10 @@ services:
   # MongoDB Database (Private Service with Disk)
   - type: pserv
     name: mongodb
-    image: mongo:latest
-    plan: starter
+    image:
+      repo: mongo:latest
+    region: us-east
+    plan: free
     port: 27017
     # Note: disks are mandatory for persistent data
     disk:
@@ -33,7 +35,8 @@ services:
   - type: web
     name: frontend
     runtime: docker
-    plan: starter
+    region: us-east
+    plan: free
     port: 80
     dockerContext: ./frontend
     dockerfilePath: Dockerfile
@@ -46,7 +49,8 @@ services:
   - type: web
     name: graphql-gateway
     runtime: docker
-    plan: starter
+    region: us-east
+    plan: free
     port: 4000
     dockerContext: ./graphql-gateway
     dockerfilePath: Dockerfile
@@ -72,7 +76,8 @@ services:
   - type: web
     name: authservice
     runtime: docker
-    plan: starter
+    region: us-east
+    plan: free
     port: 8080
     dockerContext: ./authservice
     dockerfilePath: Dockerfile
@@ -93,7 +98,8 @@ services:
   - type: pserv
     name: activity-tracking
     runtime: docker
-    plan: starter
+    region: us-east
+    plan: free
     port: 5300
     dockerContext: ./activity-tracking
     dockerfilePath: Dockerfile
@@ -112,7 +118,8 @@ services:
   - type: pserv
     name: analytics
     runtime: docker
-    plan: starter
+    region: us-east
+    plan: free
     port: 5050
     dockerContext: ./analytics
     dockerfilePath: Dockerfile
@@ -137,7 +144,8 @@ services:
   - type: pserv
     name: chatbot
     runtime: docker
-    plan: starter
+    region: us-east
+    plan: free
     port: 5052
     dockerContext: ./analytics # Context is ./analytics
     dockerfilePath: Dockerfile.chatbot # Use specific Dockerfile
@@ -162,7 +170,8 @@ services:
   - type: pserv
     name: ai-speech-parser
     runtime: docker
-    plan: starter
+    region: us-east
+    plan: free
     port: 5053
     dockerContext: ./ai-speech-parser
     dockerfilePath: Dockerfile
@@ -182,7 +191,8 @@ services:
   - type: web
     name: grafana
     image: grafana/grafana:latest
-    plan: starter
+    region: us-east
+    plan: free
     port: 3000
     dependsOn:
       - prometheus
@@ -200,7 +210,8 @@ services:
   - type: pserv
     name: prometheus
     image: prom/prometheus:latest
-    plan: starter
+    region: us-east
+    plan: free
     port: 9090
     command: prometheus --config.file=/etc/secrets/prometheus.yml # Assumes you upload config as Secret File
 
@@ -210,6 +221,7 @@ services:
   - type: pserv
     name: node-exporter
     image: prom/node-exporter:latest
-    plan: starter
+    region: us-east
+    plan: free
     port: 9100 # Default Node Exporter port
     # Command is omitted to use the default container startup command
