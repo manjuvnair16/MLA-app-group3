@@ -1,0 +1,215 @@
+# This Blueprint defines all 11 services from the docker-compose.yml file.
+
+# The region for all services in this Blueprint
+# Must match for private network communication.
+region: us-east
+
+# --- DATABASE / CORE INFRASTRUCTURE SERVICES ---
+# These services are internal (pserv) and require a persistent disk for data.
+services:
+  # MongoDB Database (Private Service with Disk)
+  - type: pserv
+    name: mongodb
+    image: mongo:latest
+    plan: starter
+    port: 27017
+    # Note: disks are mandatory for persistent data
+    disk:
+      name: mongodb-data
+      mountPath: /data/db
+      sizeGB: 10
+    envVars:
+      - key: MONGO_INITDB_ROOT_USERNAME
+        value: set_in-dashboard
+      - key: MONGO_INITDB_ROOT_PASSWORD
+        value: <SET_MONGODB_ROOT_PASSWORD>
+      - key: MONGO_INITDB_DATABASE
+        value: set_in-dashboard
+
+# --- APPLICATION SERVICES (Custom Builds) ---
+# These services are built from your source code using a Dockerfile.
+  
+  # Frontend Web Service
+  - type: web
+    name: frontend
+    runtime: docker
+    plan: starter
+    port: 80
+    dockerContext: ./frontend
+    dockerfilePath: Dockerfile
+    # Only changes in 'frontend' folder will trigger a redeploy
+    buildFilters:
+      paths:
+        - frontend/**
+
+  # GraphQL Gateway (Public API)
+  - type: web
+    name: graphql-gateway
+    runtime: docker
+    plan: starter
+    port: 4000
+    dockerContext: ./graphql-gateway
+    dockerfilePath: Dockerfile
+    dependsOn:
+      - activity-tracking
+      - analytics
+    envVars:
+      - key: ACTIVITY_URL
+        value: http://activity-tracking:5300 # Uses internal service name
+      - key: ANALYTICS_URL
+        value: http://analytics:5050 # Uses internal service name 
+      - key: CORS_ORIGINS
+        value: http://localhost,http://localhost:3000,http://127.0.0
+      - key: NODE_ENV
+        value: development
+      - key: JWT_SECRET
+        value: set_in-dashboard
+    buildFilters:
+      paths:
+        - graphql-gateway/**
+
+  # Authentication Service (Public API)
+  - type: web
+    name: authservice
+    runtime: docker
+    plan: starter
+    port: 8080
+    dockerContext: ./authservice
+    dockerfilePath: Dockerfile
+    dependsOn:
+      - mongodb
+    envVars:
+      - key: SPRING_DATA_MONGODB_URI
+        value: set_in-dashboard
+      - key: SPRING_DATA_MONGODB_DATABASE
+        value: set_in-dashboard
+      - key: FRONTEND_URL
+        value: set_in-dashboard
+    buildFilters:
+      paths:
+        - authservice/**
+
+  # Activity Tracking Service (Private API)
+  - type: pserv
+    name: activity-tracking
+    runtime: docker
+    plan: starter
+    port: 5300
+    dockerContext: ./activity-tracking
+    dockerfilePath: Dockerfile
+    dependsOn:
+      - mongodb
+    envVars:
+      - key: NODE_ENV
+        value: development
+      - key: JWT_SECRET
+        value: set_in-dashboard
+    buildFilters:
+      paths:
+        - activity-tracking/**
+
+  # Analytics Service (Private API)
+  - type: pserv
+    name: analytics
+    runtime: docker
+    plan: starter
+    port: 5050
+    dockerContext: ./analytics
+    dockerfilePath: Dockerfile
+    dependsOn:
+      - mongodb
+    envVars:
+      - key: NODE_ENV
+        value: development
+      - key: MONGO_URI
+        value: set_in-dashboard
+      - key: MONGO_DB
+        value: set_in-dashboard
+      - key: JWT_SECRET_KEY
+        value: set_in-dashboard
+      - key: OPENAI_API_KEY
+        value: set_in-dashboard
+    buildFilters:
+      paths:
+        - analytics/**
+
+  # Chatbot Service (Private API - Uses separate Dockerfile)
+  - type: pserv
+    name: chatbot
+    runtime: docker
+    plan: starter
+    port: 5052
+    dockerContext: ./analytics # Context is ./analytics
+    dockerfilePath: Dockerfile.chatbot # Use specific Dockerfile
+    dependsOn:
+      - mongodb
+    envVars:
+      - key: MONGO_URI
+        value: set_in-dashboard
+      - key: MONGO_DB
+        value: set_in-dashboard
+      - key: CHATBOT_PORT
+        value: 5052
+      - key: JWT_SECRET_KEY
+        value: set_in-dashboard
+      - key: OPENAI_API_KEY
+        value: set_in-dashboard
+    buildFilters:
+      paths:
+        - analytics/**
+
+  # AI Speech Parser Service (Worker/Private API)
+  - type: pserv
+    name: ai-speech-parser
+    runtime: docker
+    plan: starter
+    port: 5053
+    dockerContext: ./ai-speech-parser
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: GROQ_API_KEY
+        value: set_in-dashboard
+    buildFilters:
+      paths:
+        - ai-speech-parser/**
+
+# --- MONITORING SERVICES (Pre-built Images) ---
+# NOTE: Deploying these is complex due to Render's limited support for volumes/config files.
+# The volume definitions (for config and data) in your docker-compose.yml are ignored here.
+# You will need to manually configure them on the Render service dashboard.
+
+  # Grafana Dashboard (Public Web Service)
+  - type: web
+    name: grafana
+    image: grafana/grafana:latest
+    plan: starter
+    port: 3000
+    dependsOn:
+      - prometheus
+    envVars:
+      - key: GF_SECURITY_ADMIN_USER
+        value: set_in-dashboard
+      - key: GF_SECURITY_ADMIN_PASSWORD
+        value: set_in-dashboard
+      - key: GF_USERS_ALLOW_SIGN_UP
+        value: set_in-dashboard
+
+  # Prometheus Monitoring (Private Service)
+  # NOTE: You must manually upload and configure the 'prometheus.yml' config file
+  # as a Secret File on the Render dashboard for this service.
+  - type: pserv
+    name: prometheus
+    image: prom/prometheus:latest
+    plan: starter
+    port: 9090
+    command: prometheus --config.file=/etc/secrets/prometheus.yml # Assumes you upload config as Secret File
+
+  # Node Exporter (Private Service)
+  # NOTE: Render's managed services cannot use 'pid: host' or mount host-specific volumes
+  # like your docker-compose does. This will only monitor the container itself, not the host machine.
+  - type: pserv
+    name: node-exporter
+    image: prom/node-exporter:latest
+    plan: starter
+    port: 9100 # Default Node Exporter port
+    # Command is omitted to use the default container startup command
