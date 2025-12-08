@@ -57,9 +57,6 @@ services:
     plan: free
     dockerContext: ./graphql-gateway
     dockerfilePath: Dockerfile
-    dependsOn:
-      - activity-tracking
-      - analytics
     envVars:
       - key: port
         value: "4000"
@@ -85,8 +82,6 @@ services:
     plan: free
     dockerContext: ./authservice
     dockerfilePath: Dockerfile
-    dependsOn:
-      - mongodb
     envVars:
       - key: port
         value: "8080"
@@ -108,8 +103,6 @@ services:
     plan: free
     dockerContext: ./activity-tracking
     dockerfilePath: Dockerfile
-    dependsOn:
-      - mongodb
     envVars:
       - key: port
         value: "5300"
@@ -129,8 +122,6 @@ services:
     plan: free
     dockerContext: ./analytics
     dockerfilePath: Dockerfile
-    dependsOn:
-      - mongodb
     envVars:
       - key: port
         value: "5050"
@@ -156,8 +147,6 @@ services:
     plan: free
     dockerContext: ./analytics # Context is ./analytics
     dockerfilePath: Dockerfile.chatbot # Use specific Dockerfile
-    dependsOn:
-      - mongodb
     envVars:
       - key: port
         value: "5052"
@@ -204,8 +193,6 @@ services:
       url: grafana/grafana:latest
     region: us-east
     plan: free
-    dependsOn:
-      - prometheus
     envVars:
       - key: port
         value: "3000"
@@ -228,7 +215,7 @@ services:
     envVars:
       - key: port
         value: "9090"
-    command: prometheus --config.file=/etc/secrets/prometheus.yml # Assumes you upload config as Secret File
+    # command: prometheus --config.file=/etc/secrets/prometheus.yml # Assumes you upload config as Secret File
 
   # Node Exporter (Private Service)
   # NOTE: Render's managed services cannot use 'pid: host' or mount host-specific volumes
