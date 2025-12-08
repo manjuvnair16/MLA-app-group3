@@ -227,3 +227,16 @@ services:
       - key: port
         value: "9100"
     startCommand: /bin/node_exporter
+
+  # MailHog (Private Service)
+  - type: pserv
+    name: mailhog
+    runtime: image
+    image:
+      url: mailhog/mailhog:latest # FIX: Simplified image syntax
+    region: us-east
+    plan: free
+    envVars:
+      - key: port
+        value: "8025" # Web UI port from docker-compose.yml
+    # startCommand is omitted to use the default container entrypoint
