@@ -6,9 +6,10 @@
 
 # --- DATABASE / CORE INFRASTRUCTURE SERVICES ---
 # These services are internal (pserv) and require a persistent disk for data.
+# changing to web as pserv is not supported for free plan
 services:
   # MongoDB Database (Private Service with Disk)
-  - type: pserv
+  - type: web
     name: mongodb
     runtime: image
     image: 
@@ -36,7 +37,7 @@ services:
     region: oregon
     plan: free
     dockerContext: ./frontend
-    dockerfilePath: Dockerfile
+    dockerfilePath: ./frontend/Dockerfile
     # Only changes in 'frontend' folder will trigger a redeploy
     buildFilter:
       paths:
@@ -52,7 +53,7 @@ services:
     region: oregon
     plan: free
     dockerContext: ./graphql-gateway
-    dockerfilePath: Dockerfile
+    dockerfilePath: ./graphql-gateway/Dockerfile
     envVars:
       - key: port
         value: "4000"
@@ -77,7 +78,7 @@ services:
     region: oregon
     plan: free
     dockerContext: ./authservice
-    dockerfilePath: Dockerfile
+    dockerfilePath: ./authservice/Dockerfile
     envVars:
       - key: port
         value: "8080"
@@ -92,13 +93,13 @@ services:
         - authservice/**
 
   # Activity Tracking Service (Private API)
-  - type: pserv
+  - type: web
     name: activity-tracking
     runtime: docker
     region: oregon
     plan: free
     dockerContext: ./activity-tracking
-    dockerfilePath: Dockerfile
+    dockerfilePath: ./activity-tracking/Dockerfile
     envVars:
       - key: port
         value: "5300"
@@ -111,13 +112,13 @@ services:
         - activity-tracking/**
 
   # Analytics Service (Private API)
-  - type: pserv
+  - type: web
     name: analytics
     runtime: docker
     region: oregon
     plan: free
     dockerContext: ./analytics
-    dockerfilePath: Dockerfile
+    dockerfilePath: ./analytics/Dockerfile
     envVars:
       - key: port
         value: "5050"
@@ -136,13 +137,13 @@ services:
         - analytics/**
 
   # Chatbot Service (Private API - Uses separate Dockerfile)
-  - type: pserv
+  - type: web
     name: chatbot
     runtime: docker
     region: oregon
     plan: free
     dockerContext: ./analytics # Context is ./analytics
-    dockerfilePath: Dockerfile.chatbot # Use specific Dockerfile
+    dockerfilePath: ./analytics/Dockerfile.chatbot # Use specific Dockerfile
     envVars:
       - key: port
         value: "5052"
@@ -161,13 +162,13 @@ services:
         - analytics/**
 
   # AI Speech Parser Service (Worker/Private API)
-  - type: pserv
+  - type: web
     name: ai-speech-parser
     runtime: docker
     region: oregon
     plan: free
     dockerContext: ./ai-speech-parser
-    dockerfilePath: Dockerfile
+    dockerfilePath: ./ai-speech-parser/Dockerfile
     envVars:
       - key: port
         value: "5053"
