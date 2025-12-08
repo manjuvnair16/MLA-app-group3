@@ -13,7 +13,7 @@ services:
     runtime: image
     image: 
       url: mongo:latest
-    region: us-east
+    region: oregon
     plan: free
     startCommand: mongod
     envVars:
@@ -33,7 +33,7 @@ services:
   - type: web
     name: frontend
     runtime: docker
-    region: us-east
+    region: oregon
     plan: free
     dockerContext: ./frontend
     dockerfilePath: Dockerfile
@@ -49,7 +49,7 @@ services:
   - type: web
     name: graphql-gateway
     runtime: docker
-    region: us-east
+    region: oregon
     plan: free
     dockerContext: ./graphql-gateway
     dockerfilePath: Dockerfile
@@ -74,7 +74,7 @@ services:
   - type: web
     name: authservice
     runtime: docker
-    region: us-east
+    region: oregon
     plan: free
     dockerContext: ./authservice
     dockerfilePath: Dockerfile
@@ -95,7 +95,7 @@ services:
   - type: pserv
     name: activity-tracking
     runtime: docker
-    region: us-east
+    region: oregon
     plan: free
     dockerContext: ./activity-tracking
     dockerfilePath: Dockerfile
@@ -114,7 +114,7 @@ services:
   - type: pserv
     name: analytics
     runtime: docker
-    region: us-east
+    region: oregon
     plan: free
     dockerContext: ./analytics
     dockerfilePath: Dockerfile
@@ -139,7 +139,7 @@ services:
   - type: pserv
     name: chatbot
     runtime: docker
-    region: us-east
+    region: oregon
     plan: free
     dockerContext: ./analytics # Context is ./analytics
     dockerfilePath: Dockerfile.chatbot # Use specific Dockerfile
@@ -164,7 +164,7 @@ services:
   - type: pserv
     name: ai-speech-parser
     runtime: docker
-    region: us-east
+    region: oregon
     plan: free
     dockerContext: ./ai-speech-parser
     dockerfilePath: Dockerfile
