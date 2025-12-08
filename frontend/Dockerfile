@@ -8,14 +8,15 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Run stage
+# Production stage
 FROM nginx:alpine
-
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built app
 COPY --from=build /app/build /usr/share/nginx/html
 
-EXPOSE 80
+# Copy nginx config
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 10000
+
 CMD ["nginx", "-g", "daemon off;"]
