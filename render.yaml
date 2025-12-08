@@ -15,11 +15,7 @@ services:
       url: mnair16/mla-app-group3:latest
     region: us-east
     plan: free
-    # Note: disks are mandatory for persistent data
-    disk:
-      name: mongodb-data
-      mountPath: /data/db
-      sizeGB: 10
+    startCommand: mongod
     envVars:
       - key: port
         value: "27017"
@@ -193,6 +189,7 @@ services:
       url: grafana/grafana:latest
     region: us-east
     plan: free
+    startCommand: /run.sh
     envVars:
       - key: port
         value: "3000"
@@ -215,7 +212,7 @@ services:
     envVars:
       - key: port
         value: "9090"
-    # command: prometheus --config.file=/etc/secrets/prometheus.yml # Assumes you upload config as Secret File
+    startCommand: prometheus --config.file=/etc/secrets/prometheus.yml # Assumes you upload config as Secret File
 
   # Node Exporter (Private Service)
   # NOTE: Render's managed services cannot use 'pid: host' or mount host-specific volumes
@@ -229,4 +226,4 @@ services:
     envVars:
       - key: port
         value: "9100"
-    # Command is omitted to use the default container startup command
+    startCommand: /bin/node_exporter
