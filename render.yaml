@@ -12,7 +12,7 @@ services:
     name: mongodb
     runtime: image
     image: 
-      url: mnair16/mla-app-group3:latest
+      url: mongo:latest
     region: us-east
     plan: free
     startCommand: mongod
