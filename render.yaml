@@ -43,9 +43,6 @@ services:
     buildFilter:
       paths:
         - frontend/**
-    envVars:
-      - key: PORT
-        value: 80
 
 
   # GraphQL Gateway (Public API)
