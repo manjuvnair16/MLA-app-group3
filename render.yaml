@@ -13,13 +13,13 @@ services:
     name: mongodb
     runtime: image
     image: 
-      url: mongo:latest
+      url: mnair16/mla-app-group3:latest
     region: oregon
     plan: free
     startCommand: mongod
     envVars:
-      - key: port
-        value: "27017"
+      - key: PORT
+        value: 27017
       - key: MONGO_INITDB_ROOT_USERNAME
         sync: false
       - key: MONGO_INITDB_ROOT_PASSWORD
@@ -44,8 +44,9 @@ services:
       paths:
         - frontend/**
     envVars:
-      - key: port
-        value: "80"
+      - key: PORT
+        value: 80
+
 
   # GraphQL Gateway (Public API)
   - type: web
@@ -81,8 +82,8 @@ services:
     dockerContext: ./authservice
     dockerfilePath: ./authservice/Dockerfile
     envVars:
-      - key: port
-        value: "8080"
+      - key: PORT
+        value: 8080
       - key: SPRING_DATA_MONGODB_URI
         sync: false
       - key: SPRING_DATA_MONGODB_DATABASE
@@ -102,8 +103,8 @@ services:
     dockerContext: ./activity-tracking
     dockerfilePath: ./activity-tracking/Dockerfile
     envVars:
-      - key: port
-        value: "5300"
+      - key: PORT
+        value: 5300
       - key: NODE_ENV
         value: development
       - key: JWT_SECRET
@@ -124,8 +125,8 @@ services:
     dockerContext: ./analytics
     dockerfilePath: ./analytics/Dockerfile
     envVars:
-      - key: port
-        value: "5050"
+      - key: PORT
+        value: 5050
       - key: NODE_ENV
         value: development
       - key: MONGO_URI
@@ -155,8 +156,8 @@ services:
     dockerContext: ./analytics # Context is ./analytics
     dockerfilePath: ./analytics/Dockerfile.chatbot # Use specific Dockerfile
     envVars:
-      - key: port
-        value: "5052"
+      - key: PORT
+        value: 5052
       - key: MONGO_URI
         fromService:
           type: web
@@ -189,8 +190,8 @@ services:
     dockerContext: ./ai-speech-parser
     dockerfilePath: ./ai-speech-parser/Dockerfile
     envVars:
-      - key: port
-        value: "5053"
+      - key: PORT
+        value: 5053
       - key: GROQ_API_KEY
         sync: false
     buildFilter:
