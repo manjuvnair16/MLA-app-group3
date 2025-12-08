@@ -12,7 +12,7 @@ services:
     name: mongodb
     runtime: image
     image: 
-      repo: mnair16/mla-app-group3:latest
+      url: mnair16/mla-app-group3:latest
     region: us-east
     plan: free
     port: 27017
