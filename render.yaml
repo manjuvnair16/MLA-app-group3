@@ -39,13 +39,15 @@ services:
     runtime: docker
     region: us-east
     plan: free
-    port: 80
     dockerContext: ./frontend
     dockerfilePath: Dockerfile
     # Only changes in 'frontend' folder will trigger a redeploy
-    buildFilters:
+    buildFilter:
       paths:
         - frontend/**
+    envVars:
+      - key: port
+        value: "80"
 
   # GraphQL Gateway (Public API)
   - type: web
@@ -53,13 +55,14 @@ services:
     runtime: docker
     region: us-east
     plan: free
-    port: 4000
     dockerContext: ./graphql-gateway
     dockerfilePath: Dockerfile
     dependsOn:
       - activity-tracking
       - analytics
     envVars:
+      - key: port
+        value: "4000"
       - key: ACTIVITY_URL
         value: http://activity-tracking:5300 # Uses internal service name
       - key: ANALYTICS_URL
@@ -80,12 +83,13 @@ services:
     runtime: docker
     region: us-east
     plan: free
-    port: 8080
     dockerContext: ./authservice
     dockerfilePath: Dockerfile
     dependsOn:
       - mongodb
     envVars:
+      - key: port
+        value: "8080"
       - key: SPRING_DATA_MONGODB_URI
         value: set_in-dashboard
       - key: SPRING_DATA_MONGODB_DATABASE
@@ -102,12 +106,13 @@ services:
     runtime: docker
     region: us-east
     plan: free
-    port: 5300
     dockerContext: ./activity-tracking
     dockerfilePath: Dockerfile
     dependsOn:
       - mongodb
     envVars:
+      - key: port
+        value: "5300"
       - key: NODE_ENV
         value: development
       - key: JWT_SECRET
@@ -122,12 +127,13 @@ services:
     runtime: docker
     region: us-east
     plan: free
-    port: 5050
     dockerContext: ./analytics
     dockerfilePath: Dockerfile
     dependsOn:
       - mongodb
     envVars:
+      - key: port
+        value: "5050"
       - key: NODE_ENV
         value: development
       - key: MONGO_URI
@@ -148,12 +154,13 @@ services:
     runtime: docker
     region: us-east
     plan: free
-    port: 5052
     dockerContext: ./analytics # Context is ./analytics
     dockerfilePath: Dockerfile.chatbot # Use specific Dockerfile
     dependsOn:
       - mongodb
     envVars:
+      - key: port
+        value: "5052"
       - key: MONGO_URI
         value: set_in-dashboard
       - key: MONGO_DB
@@ -174,10 +181,11 @@ services:
     runtime: docker
     region: us-east
     plan: free
-    port: 5053
     dockerContext: ./ai-speech-parser
     dockerfilePath: Dockerfile
     envVars:
+      - key: port
+        value: "5053"
       - key: GROQ_API_KEY
         value: set_in-dashboard
     buildFilters:
@@ -195,10 +203,11 @@ services:
     image: grafana/grafana:latest
     region: us-east
     plan: free
-    port: 3000
     dependsOn:
       - prometheus
     envVars:
+      - key: port
+        value: "3000"
       - key: GF_SECURITY_ADMIN_USER
         value: set_in-dashboard
       - key: GF_SECURITY_ADMIN_PASSWORD
@@ -214,7 +223,9 @@ services:
     image: prom/prometheus:latest
     region: us-east
     plan: free
-    port: 9090
+    envVars:
+      - key: port
+        value: "9090"
     command: prometheus --config.file=/etc/secrets/prometheus.yml # Assumes you upload config as Secret File
 
   # Node Exporter (Private Service)
@@ -225,5 +236,7 @@ services:
     image: prom/node-exporter:latest
     region: us-east
     plan: free
-    port: 9100 # Default Node Exporter port
+    envVars:
+      - key: port
+        value: "9100"
     # Command is omitted to use the default container startup command
