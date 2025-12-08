@@ -21,11 +21,20 @@ services:
       - key: port
         value: "27017"
       - key: MONGO_INITDB_ROOT_USERNAME
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: mongodb
+          envVarKey: MONGO_INITDB_ROOT_USERNAME
       - key: MONGO_INITDB_ROOT_PASSWORD
-        value: <SET_MONGODB_ROOT_PASSWORD>
+        fromService:
+          type: web
+          name: mongodb
+          envVarKey: MONGO_INITDB_ROOT_PASSWORD
       - key: MONGO_INITDB_DATABASE
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: mongodb
+          envVarKey: MONGO_INITDB_DATABASE
 
 # --- APPLICATION SERVICES (Custom Builds) ---
 # These services are built from your source code using a Dockerfile.
@@ -66,7 +75,10 @@ services:
       - key: NODE_ENV
         value: development
       - key: JWT_SECRET
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: graphql-gateway
+          envVarKey: JWT_SECRET
     buildFilter:
       paths:
         - graphql-gateway/**
@@ -83,11 +95,20 @@ services:
       - key: port
         value: "8080"
       - key: SPRING_DATA_MONGODB_URI
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: authservice
+          envVarKey: SPRING_DATA_MONGODB_URI
       - key: SPRING_DATA_MONGODB_DATABASE
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: authservice
+          envVarKey: SPRING_DATA_MONGODB_DATABASE
       - key: FRONTEND_URL
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: authservice
+          envVarKey: FRONTEND_URL
     buildFilter:
       paths:
         - authservice/**
@@ -106,7 +127,10 @@ services:
       - key: NODE_ENV
         value: development
       - key: JWT_SECRET
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: graphql-gateway
+          envVarKey: JWT_SECRET
     buildFilter:
       paths:
         - activity-tracking/**
@@ -125,13 +149,25 @@ services:
       - key: NODE_ENV
         value: development
       - key: MONGO_URI
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: analytics
+          envVarKey: MONGO_URI
       - key: MONGO_DB
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: analytics
+          envVarKey: MONGO_DB
       - key: JWT_SECRET_KEY
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: graphql-gateway
+          envVarKey: JWT_SECRET
       - key: OPENAI_API_KEY
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: chatbot
+          envVarKey: OPENAI_API_KEY
     buildFilter:
       paths:
         - analytics/**
@@ -148,15 +184,27 @@ services:
       - key: port
         value: "5052"
       - key: MONGO_URI
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: analytics
+          envVarKey: MONGO_URI
       - key: MONGO_DB
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: analytics
+          envVarKey: MONGO_DB
       - key: CHATBOT_PORT
         value: 5052
       - key: JWT_SECRET_KEY
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: graphql-gateway
+          envVarKey: JWT_SECRET
       - key: OPENAI_API_KEY
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: chatbot
+          envVarKey: OPENAI_API_KEY
     buildFilter:
       paths:
         - analytics/**
@@ -173,7 +221,10 @@ services:
       - key: port
         value: "5053"
       - key: GROQ_API_KEY
-        value: set_in-dashboard
+        fromService:
+          type: web
+          name: ai-speech-parser
+          envVarKey: GROQ_API_KEY
     buildFilter:
       paths:
         - ai-speech-parser/**
