@@ -10,7 +10,7 @@ services:
   # MongoDB Database (Private Service with Disk)
   - type: pserv
     name: mongodb
-    env: docker
+    runtime: image
     image: 
       repo: mnair16/mla-app-group3:latest
     region: us-east
