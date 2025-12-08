@@ -15,13 +15,14 @@ services:
       url: mnair16/mla-app-group3:latest
     region: us-east
     plan: free
-    port: 27017
     # Note: disks are mandatory for persistent data
     disk:
       name: mongodb-data
       mountPath: /data/db
       sizeGB: 10
     envVars:
+      - key: port
+        value: "27017"
       - key: MONGO_INITDB_ROOT_USERNAME
         value: set_in-dashboard
       - key: MONGO_INITDB_ROOT_PASSWORD
