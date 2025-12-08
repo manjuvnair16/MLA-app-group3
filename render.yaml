@@ -11,7 +11,7 @@ services:
   - type: pserv
     name: mongodb
     image:
-      repo: mongo:latest
+      repo: mnair16/mla-app-group3
     region: us-east
     plan: free
     port: 27017
