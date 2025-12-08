@@ -73,7 +73,7 @@ services:
         value: development
       - key: JWT_SECRET
         value: set_in-dashboard
-    buildFilters:
+    buildFilter:
       paths:
         - graphql-gateway/**
 
@@ -96,7 +96,7 @@ services:
         value: set_in-dashboard
       - key: FRONTEND_URL
         value: set_in-dashboard
-    buildFilters:
+    buildFilter:
       paths:
         - authservice/**
 
@@ -117,7 +117,7 @@ services:
         value: development
       - key: JWT_SECRET
         value: set_in-dashboard
-    buildFilters:
+    buildFilter:
       paths:
         - activity-tracking/**
 
@@ -144,7 +144,7 @@ services:
         value: set_in-dashboard
       - key: OPENAI_API_KEY
         value: set_in-dashboard
-    buildFilters:
+    buildFilter:
       paths:
         - analytics/**
 
@@ -171,7 +171,7 @@ services:
         value: set_in-dashboard
       - key: OPENAI_API_KEY
         value: set_in-dashboard
-    buildFilters:
+    buildFilter:
       paths:
         - analytics/**
 
@@ -188,7 +188,7 @@ services:
         value: "5053"
       - key: GROQ_API_KEY
         value: set_in-dashboard
-    buildFilters:
+    buildFilter:
       paths:
         - ai-speech-parser/**
 
@@ -200,7 +200,8 @@ services:
   # Grafana Dashboard (Public Web Service)
   - type: web
     name: grafana
-    image: grafana/grafana:latest
+    image: 
+      url: grafana/grafana:latest
     region: us-east
     plan: free
     dependsOn:
@@ -220,7 +221,8 @@ services:
   # as a Secret File on the Render dashboard for this service.
   - type: pserv
     name: prometheus
-    image: prom/prometheus:latest
+    image: 
+      url: prom/prometheus:latest
     region: us-east
     plan: free
     envVars:
@@ -233,7 +235,8 @@ services:
   # like your docker-compose does. This will only monitor the container itself, not the host machine.
   - type: pserv
     name: node-exporter
-    image: prom/node-exporter:latest
+    image: 
+      url: prom/node-exporter:latest
     region: us-east
     plan: free
     envVars:
