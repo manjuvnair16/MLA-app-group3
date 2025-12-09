@@ -24,6 +24,19 @@ services:
     buildFilter:
       paths:
         - frontend/**
+    envVars:
+      - key: REACT_APP_GRAPHQL_URL
+        value: https://graphql-gateway-ellp.onrender.com
+      - key: REACT_APP_AUTH_URL
+        value: https://authservice-q3x5.onrender.com
+      - key: REACT_APP_CHATBOT_URL
+        value: https://chatbot-hosm.onrender.com
+      - key: REACT_APP_SPEECH_PARSER_URL
+        value: https://ai-speech-parser.onrender.com
+      - key: REACT_APP_ANALYTICS_URL
+        value: https://analytics-g19c.onrender.com
+      - key: REACT_APP_ACTIVITY_URL
+        value: https://activity-tracking-lutk.onrender.com
 
 
   # GraphQL Gateway (Public API)
@@ -35,14 +48,14 @@ services:
     dockerContext: ./graphql-gateway
     dockerfilePath: ./graphql-gateway/Dockerfile
     envVars:
-      - key: port
-        value: "4000"
+      - key: PORT
+        value: 10000
       - key: ACTIVITY_URL
-        value: http://activity-tracking:5300 # Uses internal service name
+        value: https://activity-tracking-lutk.onrender.com
       - key: ANALYTICS_URL
-        value: http://analytics:5050 # Uses internal service name 
+        value: https://analytics-g19c.onrender.com
       - key: CORS_ORIGINS
-        value: http://localhost,http://localhost:3000,http://127.0.0
+        value: https://frontend-56pg.onrender.com,http://localhost,http://localhost:3000,http://127.0.0
       - key: NODE_ENV
         value: development
       - key: JWT_SECRET
@@ -61,7 +74,7 @@ services:
     dockerfilePath: ./authservice/Dockerfile
     envVars:
       - key: PORT
-        value: 8080
+        value: 10000
       - key: SPRING_DATA_MONGODB_URI
         sync: false
       - key: SPRING_DATA_MONGODB_DATABASE
@@ -87,7 +100,7 @@ services:
     dockerfilePath: ./activity-tracking/Dockerfile
     envVars:
       - key: PORT
-        value: 5300
+        value: 10000
       - key: NODE_ENV
         value: development
       - key: JWT_SECRET
@@ -109,7 +122,7 @@ services:
     dockerfilePath: ./analytics/Dockerfile
     envVars:
       - key: PORT
-        value: 5050
+        value: 10000
       - key: NODE_ENV
         value: development
       - key: MONGO_URI
@@ -140,7 +153,7 @@ services:
     dockerfilePath: ./analytics/Dockerfile.chatbot # Use specific Dockerfile
     envVars:
       - key: PORT
-        value: 5052
+        value: 10000
       - key: MONGO_URI
         fromService:
           type: web
@@ -174,7 +187,7 @@ services:
     dockerfilePath: ./ai-speech-parser/Dockerfile
     envVars:
       - key: PORT
-        value: 5053
+        value: 10000
       - key: GROQ_API_KEY
         sync: false
     buildFilter:
