@@ -8,27 +8,8 @@
 # These services are internal (pserv) and require a persistent disk for data.
 # changing to web as pserv is not supported for free plan
 services:
-  # MongoDB Database (Private Service with Disk)
-  - type: web
-    name: mongodb
-    runtime: image
-    image: 
-      url: mnair16/mla-app-group3:latest
-    region: oregon
-    plan: free
-    startCommand: mongod
-    envVars:
-      - key: PORT
-        value: 27017
-      - key: MONGO_INITDB_ROOT_USERNAME
-        sync: false
-      - key: MONGO_INITDB_ROOT_PASSWORD
-        sync: false
-      - key: MONGO_INITDB_DATABASE
-        sync: false
 
 # --- APPLICATION SERVICES (Custom Builds) ---
-# These services are built from your source code using a Dockerfile.
   
   # Frontend Web Service
   - type: web
@@ -87,6 +68,11 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: JWT_SECRET
+        fromService:
+          type: web
+          name: graphql-gateway
+          envVarKey: JWT_SECRET
     buildFilter:
       paths:
         - authservice/**
