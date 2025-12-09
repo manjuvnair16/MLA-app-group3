@@ -17,7 +17,7 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    startCommand: nginx -g 'daemon off;'
+    # startCommand: nginx -g 'daemon off;'
     dockerContext: ./frontend
     dockerfilePath: ./frontend/Dockerfile
     # Only changes in 'frontend' folder will trigger a redeploy
